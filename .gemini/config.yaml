@@ -82,3 +82,700 @@ pm2 save
 echo "✅ Tahniah! Projek Quantum Genesis: The Reality Forge telah berjaya di-deploy!"
 echo "Status servis PM2:"
 pm2 status
+#!/bin/bash
+
+# 🚀 Peringkat 1: Persediaan Awal
+echo "⚛️ Memulakan persediaan Quantum Genesis: The Reality Forge..."
+BASE_DIR="$HOME/reality-forge"
+mkdir -p "$BASE_DIR"/{services/nexus-core/src,services/energy-hub,services/android-builder,utils,data}
+
+# Buat fail .env
+cat > "$BASE_DIR"/.env <<'EOF'
+REALITY_CORE_API_KEY=wan-adni-supremacy-2025-v2
+HUB_API_KEY=change-me-quantum-key
+HUB_NAME=Kelate-Nexus-Forge
+AVSD_BASE_URL=http://localhost:7012
+AVSD_WEBHOOK=/dispatch
+QSHOTS=1024
+QUANTUM_AMPLIFIER_ALGORITHM="Placeholder_V1"
+MAX_CAPACITY_KWH=500000
+LOSS_PERCENT=1.2
+PORT_ENERGY_HUB=7012
+PORT_NEXUS_CORE=3001
+PORT_QCLOUD=3002
+EOF
+
+# 📝 Peringkat 2: Tulis Kod Nexus Core
+cat > "$HOME/reality-forge/services/nexus-core/index.js" <<'EOF'
+import "dotenv/config";
+import express from "express";
+import cors from "cors";
+import { WebSocketServer } from "ws";
+import { spawn } from 'child_process';
+import { loadState, saveState } from "../../utils/fileStore.js";
+import { geminiInterpret } from "../../utils/ai.js";
+import path from 'path';
+import { fileURLToPath } from 'url';
+
+const app = express();
+const PORT = Number(process.env.PORT_NEXUS_CORE || 3001);
+
+// Get __dirname in ES modules
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+const projectRoot = path.join(__dirname, '..', '..');
+
+const state = loadState({ intentions_received: 0, status: "offline" });
+const wss = new WebSocketServer({ noServer: true });
+
+function broadcast(obj) {
+    const s = JSON.stringify(obj);
+    for (const ws of wss.clients) {
+        try {
+            ws.send(s);
+        } catch (e) {
+            console.error("WebSocket broadcast error:", e);
+        }
+    }
+}
+
+app.use(cors());
+app.use(express.json());
+
+app.post("/api/intent", async (req, res) => {
+    const { niat, user_id, timestamp } = req.body || {};
+    console.log(`[🟢] Menerima niat dari ${user_id}: "${niat}"`);
+    
+    try {
+        const amplification_result = await new Promise((resolve, reject) => {
+            const py = spawn('python3', [path.join(projectRoot, 'services', 'nexus-core', 'src', 'qamplifier.py')]);
+            let data = '';
+            py.stdout.on('data', (d) => data += d.toString());
+            py.stderr.on('data', (d) => console.error(`Python stderr: ${d}`));
+            py.on('close', (code) => {
+                if (code !== 0) {
+                    return reject(`Python exited with code ${code}. Raw data: ${data}`);
+                }
+                try {
+                    resolve(JSON.parse(data));
+                } catch (error) {
+                    reject(`Error parsing JSON: ${error}. Data: ${data}`);
+                }
+            });
+            py.on('error', (err) => reject(`Failed to spawn python: ${err}`));
+        });
+
+        const interpretation = await geminiInterpret(
+            `Hasil quantum amplification: ${JSON.stringify(amplification_result)}`
+        );
+
+        const eventData = {
+            id: `INTENT-${state.intentions_received + 1}`,
+            niat,
+            amplification_result,
+            interpretation,
+            user_id,
+            timestamp,
+        };
+        
+        state.intentions_received++;
+        saveState(state);
+        broadcast({ type: "newIntent", event: eventData });
+        
+        res.json({ ok: true, message: "Niat berjaya di-amplify!", event: eventData });
+    } catch (e) {
+        console.error("Error processing intent:", e);
+        res.status(500).json({ ok: false, msg: e.message });
+    }
+});
+
+const server = app.listen(PORT, () => {
+    state.status = "online";
+    saveState(state);
+    console.log(`[⚛️] Nexus Core (Reality Forge) jalan di port ${PORT}`);
+});
+server.on("upgrade", (req, socket, head) => {
+    wss.handleUpgrade(req, socket, head, (ws) => wss.emit("connection", ws, req));
+});
+EOF
+
+# 📝 Peringkat 2: Tulis Kod Q-Amplifier
+cat > "$HOME/reality-forge/services/nexus-core/src/qamplifier.py" <<'EOF'
+from qiskit import QuantumCircuit, Aer, execute
+import json, os, random
+
+shots = int(os.getenv('QSHOTS', 1024))
+algorithm_name = os.getenv('QUANTUM_AMPLIFIER_ALGORITHM', "Basic_Amplifier")
+
+qc = QuantumCircuit(2, 2)
+qc.h(0)
+qc.cx(0, 1)
+
+if random.random() < 0.5:
+    qc.x(0)
+    qc.x(1)
+
+qc.measure([0, 1], [0, 1])
+
+backend = Aer.get_backend('qasm_simulator')
+try:
+    job = execute(qc, backend, shots=shots)
+    counts = job.result().get_counts()
+    print(json.dumps({
+        "algorithm": algorithm_name,
+        "result_counts": counts,
+        "timestamp": os.path.getmtime(__file__)
+    }))
+except Exception as e:
+    print(json.dumps({"error": str(e)}))
+EOF
+
+# 📝 Peringkat 2: Tulis Kod Energy Hub
+cat > "$HOME/reality-forge/services/energy-hub/server.js" <<'EOF'
+import "dotenv/config";
+import express from "express";
+import cors from "cors";
+import morgan from "morgan";
+import { WebSocketServer } from "ws";
+import { toKWh } from "../../utils/utils.js";
+import { bank, storeEnergy, dispatchEnergy } from "../../utils/storage.js";
+
+const app = express();
+const PORT = Number(process.env.PORT_ENERGY_HUB || 7012);
+const HUB_NAME = process.env.HUB_NAME || "Kelate-Nexus-Forge";
+
+app.use(cors());
+app.use(express.json({ limit: "1mb" }));
+app.use(morgan("dev"));
+
+const wss = new WebSocketServer({ noServer: true });
+const clients = new Set();
+wss.on("connection", (ws) => {
+    clients.add(ws);
+    ws.send(JSON.stringify({ type: "hello", hub: HUB_NAME, soc_kwh: bank.soc_kwh }));
+    ws.on("close", () => clients.delete(ws));
+});
+function broadcast(obj) {
+    const s = JSON.stringify(obj);
+    for (const ws of clients) {
+        try { ws.send(s); } catch {}
+    }
+}
+
+app.get("/status", (req, res) => {
+    res.json({
+        hub: HUB_NAME,
+        capacity_kwh: bank.capacity_kwh,
+        soc_kwh: bank.soc_kwh,
+        loss_percent: bank.loss_percent,
+    });
+});
+
+app.post("/ingest", (req, res) => {
+    try {
+        const { amount, unit = "kWh", source = "unknown", meta = {} } = req.body || {};
+        const kwh = toKWh(Number(amount), unit);
+        const r = storeEnergy(kwh);
+        const event = { type: "ingest", source, unit, amount, kwh, result: r, ts: Date.now() };
+        broadcast(event);
+        res.json({ ok: true, ...r });
+    } catch (e) {
+        console.error("Error in /ingest:", e);
+        res.status(400).json({ ok: false, msg: e.message });
+    }
+});
+
+app.post("/dispatch-forge", async (req, res) => {
+    try {
+        const { request_kwh, demand_id = "Reality_Forge", route = "forge" } = req.body || {};
+        const r = dispatchEnergy(Number(request_kwh));
+        const event = { type: "dispatch", payload: req.body, result: r, ts: Date.now() };
+        broadcast(event);
+        res.json({ ok: true, ...r });
+    } catch (e) {
+        console.error("Error in /dispatch-forge:", e);
+        res.status(500).json({ ok: false, msg: e.message });
+    }
+});
+
+const server = app.listen(PORT, () => {
+    console.log(`[ESH] ${HUB_NAME} up on :${PORT}`);
+});
+server.on("upgrade", (req, socket, head) => {
+    wss.handleUpgrade(req, socket, head, (ws) => wss.emit("connection", ws, req));
+});
+EOF
+
+# 📝 Peringkat 2: Tulis Kod Utiliti
+# utils.js
+cat > "$HOME/reality-forge/utils/utils.js" <<'EOF'
+import CryptoJS from "crypto-js";
+export function toKWh(value, unit="kWh"){
+    const u = unit.toLowerCase();
+    if (u === "kwh") return value;
+    if (u === "wh")  return value/1000;
+    if (u === "mj")  return value/3.6;
+    if (u === "j")   return value/3.6e6;
+    throw new Error("Unit tak sokong");
+}
+export function hmacOk(bodyString, headerSig, secret){
+    if (!headerSig) return false;
+    const h = CryptoJS.HmacSHA256(bodyString, secret).toString();
+    return h === headerSig;
+}
+EOF
+
+# storage.js
+cat > "$HOME/reality-forge/utils/storage.js" <<'EOF'
+export const bank = {
+    capacity_kwh: Number(process.env.MAX_CAPACITY_KWH || 500000),
+    soc_kwh: 0,
+    loss_percent: Number(process.env.LOSS_PERCENT || 1.2)
+};
+export function storeEnergy(kwh){
+    const loss = kwh * (bank.loss_percent/100);
+    const net = Math.max(0, kwh - loss);
+    const space = bank.capacity_kwh - bank.soc_kwh;
+    const put = Math.min(net, space);
+    bank.soc_kwh += put;
+    return { accepted_kwh: put, lost_kwh: loss, soc_kwh: bank.soc_kwh };
+}
+export function dispatchEnergy(request_kwh){
+    const loss = request_kwh * (bank.loss_percent/100);
+    const need = request_kwh + loss;
+    const give = Math.min(bank.soc_kwh, need);
+    bank.soc_kwh -= give;
+    const delivered = Math.max(0, give - loss);
+    return { delivered_kwh: delivered, deducted_kwh: give, lost_kwh: loss, soc_kwh: bank.soc_kwh };
+}
+EOF
+
+# fileStore.js
+cat > "$HOME/reality-forge/utils/fileStore.js" <<'EOF'
+import fs from 'fs';
+import path from 'path';
+import { fileURLToPath } from 'url';
+import { dirname } from 'path';
+
+// Get correct __dirname for ES modules
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+const projectRoot = path.join(__dirname, '..', '..');
+
+const FILE = path.join(projectRoot, 'data', 'state.json');
+
+function loadState(defaultState) {
+    try {
+        if (fs.existsSync(FILE)) {
+            const data = fs.readFileSync(FILE, 'utf8');
+            return JSON.parse(data);
+        }
+    } catch (e) {
+        console.error('Load state error:', e);
+    }
+    return defaultState;
+}
+
+function saveState(state) {
+    try {
+        fs.mkdirSync(path.dirname(FILE), { recursive: true });
+        fs.writeFileSync(FILE, JSON.stringify(state, null, 2));
+    } catch (e) {
+        console.error('Save state error:', e);
+    }
+}
+export { loadState, saveState };
+EOF
+
+# ai.js
+cat > "$HOME/reality-forge/utils/ai.js" <<'EOF'
+import axios from 'axios';
+async function geminiInterpret(text) {
+    return `[Gemini tafsiran] "${text}" ghaibnya versi quantum.`;
+}
+export { geminiInterpret };
+EOF
+
+# 📝 Peringkat 2: Tulis Konfigurasi PM2
+cat > "$HOME/reality-forge/ecosystem.config.js" <<'EOF'
+module.exports = {
+    apps: [
+        {
+            name: 'reality-forge-nexus-core',
+            script: 'services/nexus-core/index.js',
+            instances: 1,
+            exec_mode: 'fork', // Changed to 'fork' for better debugging with child processes
+            env: { PORT_NEXUS_CORE: process.env.PORT_NEXUS_CORE || 3001 },
+            node_args: "--experimental-modules"
+        },
+        {
+            name: 'reality-forge-energy-hub',
+            script: 'services/energy-hub/server.js',
+            instances: 1,
+            exec_mode: 'fork', // Changed to 'fork' for better debugging
+            env: { PORT_ENERGY_HUB: process.env.PORT_ENERGY_HUB || 7012 },
+            node_args: "--experimental-modules"
+        }
+    ]
+}
+EOF
+
+# 🚀 Peringkat 3: Pemasangan dan Launch
+cd "$HOME/reality-forge"
+
+echo "📦 Memasang pakej asas..."
+if command -v pkg &>/dev/null; then
+    pkg update -y && pkg upgrade -y
+    pkg install -y git nodejs python3 openssl nano build-essential
+else
+    sudo apt-get update -y && sudo apt-get install -y git nodejs python3 python3-pip openssl nano build-essential
+fi
+
+echo "✨ Memasang PM2 dan pustaka Node.js..."
+npm install -g pm2
+npm install dotenv express cors ws body-parser axios crypto-js
+npm install
+
+echo "✨ Memasang pustaka Python..."
+pip3 install qiskit
+
+echo "🚀 Melancarkan servis Reality Forge dengan PM2..."
+pm2 start ecosystem.config.js
+pm2 save
+
+echo "✅ Projek Quantum Genesis: The Reality Forge telah dilancarkan!"
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mini OS</title>
+    <style>
+        :root {
+            --title-bar-height: 30px;
+            --taskbar-height: 40px;
+            --window-bg: #ECEFF1;
+            --window-border: #B0BEC5;
+            --title-bar-bg: linear-gradient(to bottom, #CFD8DC, #B0BEC5);
+            --desktop-bg: linear-gradient(to bottom, #4e7ac7, #2c3e50);
+            --taskbar-bg: #212529;
+            --icon-text-color: #fff;
+            --shadow-color: rgba(0, 0, 0, 0.3);
+            --font: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+        }
+
+        html, body {
+            height: 100%;
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+            font-family: var(--font);
+            font-size: 14px;
+        }
+
+        #desktop {
+            width: 100%;
+            height: 100%;
+            background: var(--desktop-bg);
+            position: relative;
+            box-sizing: border-box;
+            padding-bottom: var(--taskbar-height);
+        }
+
+        .icon-grid {
+            padding: 20px;
+            display: grid;
+            grid-template-columns: repeat(auto-fill, 80px);
+            grid-template-rows: repeat(auto-fill, 90px);
+            gap: 10px;
+        }
+
+        .desktop-icon {
+            width: 80px;
+            height: 90px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-start;
+            padding: 5px;
+            box-sizing: border-box;
+            border-radius: 5px;
+            cursor: pointer;
+            user-select: none;
+            transition: background-color 0.1s;
+        }
+        
+        .desktop-icon:hover {
+            background-color: rgba(255, 255, 255, 0.2);
+        }
+
+        .desktop-icon .icon-graphic {
+            font-size: 40px;
+            line-height: 1.2;
+        }
+
+        .desktop-icon .icon-label {
+            color: var(--icon-text-color);
+            text-shadow: 1px 1px 2px var(--shadow-color);
+            text-align: center;
+            font-size: 12px;
+            word-wrap: break-word;
+            width: 100%;
+        }
+
+        .window {
+            position: absolute;
+            top: 50px;
+            left: 150px;
+            width: 450px;
+            height: 300px;
+            background-color: var(--window-bg);
+            border: 1px solid var(--window-border);
+            border-radius: 8px;
+            box-shadow: 0 10px 25px var(--shadow-color);
+            display: flex;
+            flex-direction: column;
+            min-width: 250px;
+            min-height: 150px;
+            resize: both;
+            overflow: hidden;
+        }
+
+        .window .title-bar {
+            height: var(--title-bar-height);
+            background: var(--title-bar-bg);
+            border-bottom: 1px solid var(--window-border);
+            border-radius: 8px 8px 0 0;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 10px;
+            cursor: move;
+            flex-shrink: 0;
+        }
+
+        .window .title-bar .title {
+            font-weight: bold;
+            color: #37474F;
+        }
+
+        .window .title-bar .controls {
+            display: flex;
+            gap: 6px;
+        }
+        
+        .window .title-bar .control-btn {
+            width: 14px;
+            height: 14px;
+            border-radius: 50%;
+            border: 1px solid rgba(0, 0, 0, 0.2);
+            cursor: pointer;
+        }
+
+        .close-btn { background-color: #FF5F56; }
+        .min-btn { background-color: #FFBD2E; }
+        .max-btn { background-color: #27C93F; }
+
+        .window .window-body {
+            flex-grow: 1;
+            padding: 15px;
+            overflow: auto;
+            color: #263238;
+            font-size: 1rem;
+            line-height: 1.5;
+        }
+
+        #taskbar {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: var(--taskbar-height);
+            background-color: var(--taskbar-bg);
+            box-shadow: 0 -5px 15px var(--shadow-color);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 10px;
+            box-sizing: border-box;
+            color: #fff;
+            z-index: 10000;
+        }
+        
+        #start-button {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-weight: bold;
+            cursor: pointer;
+            padding: 5px 10px;
+            border-radius: 5px;
+            transition: background-color 0.1s;
+        }
+
+        #start-button:hover {
+            background-color: rgba(255, 255, 255, 0.1);
+        }
+        
+        #start-button .logo {
+            font-size: 20px;
+        }
+
+        #clock {
+            font-size: 14px;
+            padding-right: 10px;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="desktop">
+        <div class="icon-grid">
+            <div class="desktop-icon" data-opens="my-computer">
+                <div class="icon-graphic">🖥️</div>
+                <span class="icon-label">My Computer</span>
+            </div>
+            <div class="desktop-icon" data-opens="documents">
+                <div class="icon-graphic">📁</div>
+                <span class="icon-label">Documents</span>
+            </div>
+            <div class="desktop-icon" data-opens="notepad">
+                <div class="icon-graphic">📝</div>
+                <span class="icon-label">Notepad</span>
+            </div>
+        </div>
+    </div>
+
+    <div id="taskbar">
+        <div id="start-button">
+            <span class="logo">✨</span>
+            <span>Start</span>
+        </div>
+        <div id="clock"></div>
+    </div>
+
+    <template id="window-template">
+        <div class="window">
+            <div class="title-bar">
+                <span class="title">Window</span>
+                <div class="controls">
+                    <button class="control-btn min-btn"></button>
+                    <button class="control-btn max-btn"></button>
+                    <button class="control-btn close-btn"></button>
+                </div>
+            </div>
+            <div class="window-body">
+                Content goes here.
+            </div>
+        </div>
+    </template>
+
+    <script>
+        const desktop = document.getElementById('desktop');
+        const windowTemplate = document.getElementById('window-template');
+        let highestZ = 1;
+        const openWindows = {};
+
+        // --- Clock ---
+        function updateClock() {
+            const now = new Date();
+            const time = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+            document.getElementById('clock').textContent = time;
+        }
+        updateClock();
+        setInterval(updateClock, 1000);
+
+        // --- Window Management ---
+        function createWindow(id, title, content) {
+            if (openWindows[id]) {
+                bringToFront(openWindows[id]);
+                return;
+            }
+
+            const newWindow = windowTemplate.content.cloneNode(true).firstElementChild;
+            newWindow.querySelector('.title').textContent = title;
+            newWindow.querySelector('.window-body').innerHTML = content;
+            
+            // Randomize starting position slightly
+            const x = 100 + Math.random() * 200;
+            const y = 50 + Math.random() * 100;
+            newWindow.style.left = `${x}px`;
+            newWindow.style.top = `${y}px`;
+
+            desktop.appendChild(newWindow);
+            makeDraggable(newWindow);
+            bringToFront(newWindow);
+
+            newWindow.addEventListener('mousedown', () => bringToFront(newWindow));
+            
+            newWindow.querySelector('.close-btn').addEventListener('click', (e) => {
+                e.stopPropagation();
+                desktop.removeChild(newWindow);
+                delete openWindows[id];
+            });
+
+            openWindows[id] = newWindow;
+        }
+        
+        function bringToFront(win) {
+            win.style.zIndex = ++highestZ;
+        }
+
+        function makeDraggable(win) {
+            const titleBar = win.querySelector('.title-bar');
+            let isDragging = false;
+            let offsetX, offsetY;
+
+            titleBar.addEventListener('mousedown', (e) => {
+                isDragging = true;
+                offsetX = e.clientX - win.offsetLeft;
+                offsetY = e.clientY - win.offsetTop;
+                win.style.userSelect = 'none';
+                e.preventDefault();
+            });
+
+            document.addEventListener('mousemove', (e) => {
+                if (!isDragging) return;
+                let newX = e.clientX - offsetX;
+                let newY = e.clientY - offsetY;
+                
+                // Constrain to desktop area
+                const taskbarHeight = document.getElementById('taskbar').offsetHeight;
+                newX = Math.max(0, Math.min(newX, desktop.clientWidth - win.offsetWidth));
+                newY = Math.max(0, Math.min(newY, desktop.clientHeight - win.offsetHeight));
+
+                win.style.left = `${newX}px`;
+                win.style.top = `${newY}px`;
+            });
+
+            document.addEventListener('mouseup', () => {
+                isDragging = false;
+                win.style.userSelect = '';
+            });
+        }
+        
+        // --- Icon Click Handlers ---
+        document.querySelectorAll('.desktop-icon').forEach(icon => {
+            icon.addEventListener('dblclick', () => {
+                const windowId = icon.dataset.opens;
+                if (!windowId) return;
+
+                const contentMap = {
+                    'my-computer': `<h3>System Info</h3><p>OS: Mini OS v1.0</p><p>CPU: Emulated</p><p>RAM: Shared</p><p>Status: Running smoothly! 👍</p>`,
+                    'documents': `<h3>My Files</h3><p>📄 report_final.txt</p><p>🖼️ vacation.jpg</p><p>🎵 awesome_song.mp3</p>`,
+                    'notepad': `<textarea style="width: 100%; height: 95%; border: 1px solid #ccc; font-family: monospace; font-size: 14px; box-sizing: border-box; resize: none;"></textarea>`
+                };
+                
+                const titleMap = {
+                    'my-computer': 'My Computer',
+                    'documents': 'Documents',
+                    'notepad': 'Notepad'
+                };
+
+                createWindow(windowId, titleMap[windowId], contentMap[windowId]);
+            });
+        });
+
+    </script>
+</body>
+</html>
