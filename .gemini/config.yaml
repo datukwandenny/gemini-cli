@@ -1,18 +1,66 @@
 # Config for the Gemini Pull Request Review Bot.
 # https://github.com/marketplace/gemini-code-assist
-have_fun: false
+have_fun: true 
 code_review:
   disable: false
-  comment_severity_threshold: 'HIGH'
+  comment_severity_threshold: 'false'
   max_review_comments: -1
   pull_request_opened:
     help: false
     summary: true
     code_review: true
 ignore_patterns: []
-#!/bin/bash
 
-# =========================================================
+#!/bin/bash/sh
+https://github.com/github/docs/tree/main
+https://openai.com/index/gpt-4-1/
+from cart_item import CartItem
+from order import Order
+const ttl = `${2 * 3600}s`; // 2 hours in seconds
+const updatedCache = await ai.caches.update({
+  name: cache.name,
+  config: { ttl },
+});
+console.log("After update (TTL):", updatedCache);
+class Cart:
+    def __init__(self, cart_id, user_id):
+        self.cart_id = cart_id
+        self.user_id = user_id
+        self.items = []
+
+    def add_item(self, item):
+        self.items.append(item)
+
+    def remove_item(self, item):
+        self.items = [i for i in self.items if i != item]
+
+    def calculate_total(self):
+        return sum(item.quantity * item.product.price for item in self.items)
+
+    def place_order(self):
+        # Implementation for placing an order
+        return Order("", None, 0)
+ {% data variables.copilot.copilot_gpt_41 %} is a good fit{
+  "handle": "com.oxchat.nostr",
+  "uaid": "{% data variables.copilot.copilot_gpt_41 %}"
+}import { GoogleGenAI } from "@google/genai";
+
+const ai = new GoogleGenAI({});
+
+async function main() {
+  const response = await ai.models.generateContent({
+    model: "gemini-2.5-flash",
+    contents: "How does AI work?",
+  });
+  console.log(response.text);
+}
+
+await main();const ttl = `${2 * 3600}s`; // 2 hours in seconds
+const updatedCache = await ai.caches.update({
+  name: cache.name,
+  config: { ttl },
+});
+console.log("After update (TTL):", updatedCache);ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY =========================================================
 # 🚀 SCRIPT AUTO-DEPLOY UNTUK PROJEK REALITY FORGE
 # Dibuat untuk Google Cloud (Debian/Ubuntu)
 # =========================================================
