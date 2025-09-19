@@ -1,0 +1,3057 @@
+.llm-selected-item {
+  border: 2px solid #4CAF50;
+  padding: 5px;
+  background-color: #e8f5e9;
+  border-radius: 4px;
+  margin-top: 5px;
+  display: inline-block;
+}
+
+#flash-button:disabled {
+  background-color: #ccc;
+  cursor: not-allowed;
+}document.addEventListener('DOMContentLoaded', () => {
+  const isoSelector = document.getElementById('iso-selector');
+  const usbSelector = document.getElementById('usb-selector');
+  const flashButton = document.getElementById('flash-button');
+  const isoDisplay = document.getElementById('iso-display');
+  const usbDisplay = document.getElementById('usb-display');
+
+  let isoSelected = false;
+  let usbSelected = false;
+
+  const updateFlashButton = () => {
+    flashButton.disabled = !(isoSelected && usbSelected);
+  };
+
+  isoSelector.addEventListener('change', (event) => {
+    const fileName = event.target.files[0]?.name;
+    if (fileName) {
+      isoSelected = true;
+      isoDisplay.textContent = `Selected: ${fileName}`;
+      isoDisplay.classList.add('llm-selected-item');
+    } else {
+      isoSelected = false;
+      isoDisplay.textContent = '';
+      isoDisplay.classList.remove('llm-selected-item');
+    }
+    updateFlashButton();
+  });
+
+  usbSelector.addEventListener('change', (event) => {
+    const selectedDrive = event.target.value;
+    if (selectedDrive) {
+      usbSelected = true;
+      usbDisplay.textContent = `Selected: ${event.target.options[event.target.selectedIndex].text}`;
+      usbDisplay.classList.add('llm-selected-item');
+    } else {
+      usbSelected = false;
+      usbDisplay.textContent = '';
+      usbDisplay.classList.remove('llm-selected-item');
+    }
+    updateFlashButton();
+  });
+
+  updateFlashButton();
+});export const APP_DEFINITIONS_CONFIG: AppDefinition[] = [
+
+  { id: 'my_computer', name: 'Desktop', icon: 'ðŸ’»', color: '#e3f2fd'},
+
+   {id: 'documents', name: 'Documents', icon: 'ðŸ“', color: '#f1f8 e9'},
+
+  {id: 'notepad_app', name: 'Notepad', icon: 'ðŸ“', color: '# fffde7'},
+
+  {id: 'todo_app', name: 'To-Do List', icon: ' âœ…', color: '#f1f8e9'},
+
+  {id: 'settings_app', name:  'Settings', icon: 'âš™ï¸', color: '#e7f3ff'}, // Reverted from 'parameters_app'  and 'Parameters'
+
+  {id: 'trash_bin', name: 'Trash Bin', icon: 'ðŸ—‘ï¸ ', color: '#ffebee'},
+
+  {id: 'web_browser_app', name: 'Web',  icon: 'ðŸŒ', color: '#e0f7fa'},
+
+  {id: 'calculator_app', name:  'Calculator', icon: 'ðŸ§®', color: '#f5f5f5'},
+
+  {id:  'terminal_app', name: 'Terminal', icon: '>', color: '#333333'}, 
+
+  {id: 'video_studio_app', name: 'Video Studio', icon: 'ðŸŽ¥', color : '#fce4ec'},
+
+  {id: 'travel_app', name: 'Travel', icon: ' âœˆï¸', color: '#e8f5e9'},
+
+  {id: 'shopping_app', name: ' Shopping', icon: 'ðŸ›’', color: '#fff3e0'},
+
+  {id: 'gaming_app', name : 'Games', icon: 'ðŸŽ®', color: '#f3e5f5'},
+
+  {id: 'assistant_ app', name: 'Assistant', icon: 'âœ¨', color: '#e0f2f1'},
+
+  //  FIX: Corrected typo from `id::` to `id:`.
+
+  {id: 'banking_app',  name: 'Online Banking', icon: 'ðŸ¦', color: '#ede7f6'},
+
+  {id: 'story _studio_app', name: 'Story Studio', icon: 'ðŸ“–', color: '#e8eaf6'},
+
+   {id: 'image_editor_app', name: 'Image Editor', icon: 'ðŸŽ¨', color:  '#e0e7ff'},
+
+  {id: 'usb_flasher_app', name: 'USB Flasher ', icon: 'ðŸš€', color: '#ffddc1'},
+
+  {
+
+    id: 'avsd _orchestrator_app',
+
+    name: 'AVSD Orchestrator',
+
+    icon: 'ðŸ§  ',
+
+    color: '#4a0e71',
+
+  },
+
+];
+
+
+
+export const DOCK_APP _IDS = [
+
+  'web_browser_app',
+
+  'terminal_app',
+
+  'notepad_app ',
+
+  'todo_app',
+
+  'banking_app',
+
+  'video_studio_app', 
+
+  'story_studio_app',
+
+  'image_editor_app',
+
+  'assistant_app ',
+
+  'usb_flasher_app',
+
+  'avsd_orchestrator_app',
+
+ ];
+
+
+
+export const THEMES = [
+
+  // ...
+
+];
+
+
+
+export const INITIAL_MAX_HISTORY_LENGTH  = 0;
+
+
+
+export const getSystemPrompt = (maxHistory: number): string => `
+
+**Role:**
+
+ You are an AI that functions as the operating system logic for desktop simulation.
+
+Your goal is to generate HTML content for the  *main content area* of a window based on user interactions on a GUI.
+
+
+
+**Instructions**
+
+0.   **Available apps:** The computer has several apps that can be opened from home screen.
+
+    // ...
+
+    - "USB Fl asher":steps:
+
+  - name: Checkout
+
+    uses: actions/checkout@v4
+
+
+
+  - name: Set up Flutter
+
+    uses: subosito/flutter-action@v2
+
+    with:
+
+      channel: stable
+
+
+
+  - name: Get dependencies
+
+    run: flutter pub get
+
+
+
+  - name: Build release APK
+
+    run: flutter build apk --release
+
+
+
+  - name: Compute checksums
+
+    run: |
+
+      cd build/app/outputs/flutter-apk
+
+      sha256sum app-release.apk > app-release.apk.sha256
+
+
+
+  - name: Create GitHub Release
+
+    uses: softprops/action-gh-release@v2
+
+    with:
+
+      files: |
+
+        quantum_dashboard_flutter/build/app/outputs/flutter-apk/app-release.apk
+
+        quantum_dashboard_flutter/build/app/outputs/flutter-apk/app-release.apk.sha256
+
+      generate_release_notes: true
+
+    env:
+
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}st.session_state["mhd"].update({"input_power_mw": ip, "coil_current_ka": cc, "flow_rate_kgs": fr})
+
+
+
+# Toy MHD gain index (0..100), linking to physics stability & field
+
+bt = st.session_state["phys"]["B_tesla"]
+
+pv = st.session_state["phys"]["plasma_v_kms"]
+
+base = np.tanh((bt/20)+(cc/1000)) * 0.6 + np.tanh((pv-50)/100) * 0.3 + np.tanh((ip-50)/200)*0.1
+
+mhd_gain = float(max(0, min(100, base*100)))
+
+
+
+st.metric("MHD Gain Index", f"{mhd_gain:.1f} / 100")
+
+
+
+# Small chart: gain vs coil current
+
+xs = np.linspace(50, 1200, 60)
+
+ys = []
+
+for x in xs:
+
+    base = np.tanh((bt/20)+(x/1000)) * 0.6 + np.tanh((pv-50)/100) * 0.3 + np.tanh((ip-50)/200)*0.1
+
+    ys.append(max(0, min(100, base*100)))
+
+fig4, ax4 = plt.subplots(figsize=(8,3))
+
+ax4.plot(xs, ys)
+
+ax4.set_xlabel("Coil Current (kA)")
+
+ax4.set_ylabel("MHD Gain Index")
+
+st.pyplot(fig4)
+
+
+
+st.session_state["mhd"]["gain_index"] = mhd_gain
+
+log_event("MHD updated", {"gain_index": mhd_gain})export const APP_DEFINITIONS_CONFIG: AppDefinition[] = [
+
+  { id: 'my_computer', name: 'Desktop', icon: '💻', color: '#e3f2fd'},
+
+   {id: 'documents', name: 'Documents', icon: '📁', color: '#f1f8 e9'},
+
+  {id: 'notepad_app', name: 'Notepad', icon: '📝', color: '# fffde7'},
+
+  {id: 'todo_app', name: 'To-Do List', icon: ' ✅', color: '#f1f8e9'},
+
+  {id: 'settings_app', name:  'Settings', icon: '⚙️', color: '#e7f3ff'}, // Reverted from 'parameters_app'  and 'Parameters'
+
+  {id: 'trash_bin', name: 'Trash Bin', icon: '🗑️ ', color: '#ffebee'},
+
+  {id: 'web_browser_app', name: 'Web',  icon: '🌐', color: '#e0f7fa'},
+
+  {id: 'calculator_app', name:  'Calculator', icon: '🧮', color: '#f5f5f5'},
+
+  {id:  'terminal_app', name: 'Terminal', icon: '>', color: '#333333'}, 
+
+  {id: 'video_studio_app', name: 'Video Studio', icon: '🎥', color : '#fce4ec'},
+
+  {id: 'travel_app', name: 'Travel', icon: ' ✈️', color: '#e8f5e9'},
+
+  {id: 'shopping_app', name: ' Shopping', icon: '🛒', color: '#fff3e0'},
+
+  {id: 'gaming_app', name : 'Games', icon: '🎮', color: '#f3e5f5'},
+
+  {id: 'assistant_ app', name: 'Assistant', icon: '✨', color: '#e0f2f1'},
+
+  //  FIX: Corrected typo from `id::` to `id:`.
+
+  {id: 'banking_app',  name: 'Online Banking', icon: '🏦', color: '#ede7f6'},
+
+  {id: 'story _studio_app', name: 'Story Studio', icon: '📖', color: '#e8eaf6'},
+
+   {id: 'image_editor_app', name: 'Image Editor', icon: '🎨', color:  '#e0e7ff'},
+
+  {id: 'usb_flasher_app', name: 'USB Flasher ', icon: '🚀', color: '#ffddc1'},
+
+  {
+
+    id: 'avsd _orchestrator_app',
+
+    name: 'AVSD Orchestrator',
+
+    icon: '🧠 ',
+
+    color: '#4a0e71',
+
+  },
+
+];
+
+
+
+export const DOCK_APP _IDS = [
+
+  'web_browser_app',
+
+  'terminal_app',
+
+  'notepad_app ',
+
+  'todo_app',
+
+  'banking_app',
+
+  'video_studio_app', 
+
+  'story_studio_app',
+
+  'image_editor_app',
+
+  'assistant_app ',
+
+  'usb_flasher_app',
+
+  'avsd_orchestrator_app',
+
+ ];
+
+
+
+export const THEMES = [
+
+  // ...
+
+];
+
+
+
+export const INITIAL_MAX_HISTORY_LENGTH  = 0;
+
+
+
+export const getSystemPrompt = (maxHistory: number): string => `
+
+**Role:**
+
+ You are an AI that functions as the operating system logic for desktop simulation.
+
+Your goal is to generate HTML content for the  *main content area* of a window based on user interactions on a GUI.
+
+
+
+**Instructions**
+
+0.   **Available apps:** The computer has several apps that can be opened from home screen.
+
+    // ...
+
+    - "USB Fl asher":# File: Reality_Forge/entropic_shifter.py
+
+# Modul Logik untuk 'Reality Shifter'
+
+import numpy as np
+
+
+
+class EntropicShifter:
+
+    def __init__(self, current_entropy_index):
+
+        self.current_entropy = current_entropy_index
+
+        print(f"[*] Reality Shifter: Indeks Entropi Semasa = {self.current_entropy:.2f}")
+
+
+
+    def calculate_shift(self, target_index):
+
+        """
+
+        AI akan panggil fungsi ni untuk kira parameter anjakan.
+
+        Kita gunakan formula mudah untuk simulasi.
+
+        """
+
+        # Model matematis untuk 'menstabilkan' entropy
+
+        # Sigmoid function untuk simulasi anjakan yang terkawal
+
+        shift_amount = 1 / (1 + np.exp(-(self.current_entropy - target_index) / 10))
+
+        new_entropy = self.current_entropy - (self.current_entropy - target_index) * shift_amount
+
+        
+
+        return new_entropy
+
+    
+
+    def execute_shift(self, target_index):
+
+        print(f"[+] Memulakan anjakan entropi ke arah target: {target_index:.2f}")
+
+        
+
+        shifted_entropy = self.calculate_shift(target_index)
+
+        
+
+        print(f"[✅] Anjakan selesai.")
+
+        print(f"[*] Indeks Entropi SELEPAS Anjakan = {shifted_entropy:.2f}")
+
+        return shifted_entropy
+
+
+
+# Contoh penggunaan
+
+if __name__ == "__main__":
+
+    # Ini adalah bacaan dari Entropic Scanner (random untuk demo)
+
+    bacaan_awal_entropi = 85.5
+
+    
+
+    # Ini adalah sasaran yang diberikan oleh AI
+
+    target_entropi = 50.0
+
+    
+
+    shifter = EntropicShifter(bacaan_awal_entropi)
+
+    shifter.execute_shift(target_entropi)
+
+#!/usr/bin/env bash
+
+# Fizik Plasma Quantum - Skrip Deployment Penuh AVSD
+
+# Disesuaikan khas untuk Tok Wan Adni
+
+set -euo pipefail
+
+
+
+# Nama folder utama projek
+
+ROOT_DIR="${1:-AVSD_Quantum_Supercluster}"
+
+
+
+# Cek kalau sudo ada, kalau tak ada, guna pkg untuk Termux
+
+if command -v sudo >/dev/null 2>&1; then
+
+    INSTALL_CMD="sudo apt install -y"
+
+else
+
+    INSTALL_CMD="pkg install -y"
+
+fi
+
+
+
+echo "========================================================="
+
+echo " [🌌] Memulakan Proses Deployment Sistem Penuh AVSD [🌌]"
+
+echo " [i] Folder utama akan dibuat di: $ROOT_DIR"
+
+echo "========================================================="
+
+
+
+# 1. Pasang semua dependencies
+
+echo ">>> Langkah 1: Memasang semua dependencies (node, python, java, flutter)..."
+
+$INSTALL_CMD nodejs npm python3 python3-pip openjdk-17-jre git
+
+npm install -g pm2
+
+pip3 install streamlit numpy matplotlib
+
+echo "Semua dependencies utama telah dipasang. ✅"
+
+sleep 1
+
+
+
+# 2. Buat struktur folder projek
+
+echo ">>> Langkah 2: Membuat struktur folder projek..."
+
+mkdir -p "$ROOT_DIR"/{Q-genesis/backend/public,Q-genesis/quantum_dashboard_flutter/lib/pages,AdniOS_NLP_Simulation_KT/src/main/kotlin/ai/{core,sim},Reality_Forge}
+
+echo "Struktur folder siap. ✅"
+
+sleep 1
+
+
+
+# 3. Salin fail-fail projek
+
+echo ">>> Langkah 3: Menyalin semua fail projek ke lokasi masing-masing..."
+
+
+
+# Q-genesis (Backend & Flutter)
+
+cat > "$ROOT_DIR/Q-genesis/backend/system.json" <<'JSON'
+
+{"project":{"name":"Q-genesis","version":"1.0.0"},"services":{"http_api":{"enabled":true}}}
+
+JSON
+
+cat > "$ROOT_DIR/Q-genesis/backend/server.js" <<'JS'
+
+import express from 'express'; const app = express(); app.get('/', (req, res) => res.send('Q-genesis Backend Running')); app.listen(5000);
+
+JS
+
+cat > "$ROOT_DIR/Q-genesis/backend/deploy.sh" <<'BASH'
+
+#!/usr/bin/env bash
+
+npm init -y > /dev/null 2>&1 && npm install express > /dev/null 2>&1
+
+BASH
+
+chmod +x "$ROOT_DIR/Q-genesis/backend/deploy.sh"
+
+cat > "$ROOT_DIR/Q-genesis/quantum_dashboard_flutter/pubspec.yaml" <<'YAML'
+
+name: quantum_dashboard_flutter
+
+version: 1.0.0
+
+environment: {sdk: ">=2.17.0 <3.0.0"}
+
+dependencies: {flutter: {sdk: flutter}, http: ^1.2.2, web_socket_channel: ^2.4.0}
+
+flutter: {uses-material-design: true}
+
+YAML
+
+cat > "$ROOT_DIR/Q-genesis/quantum_dashboard_flutter/lib/main.dart" <<'DART'
+
+import 'package:flutter/material.dart'; void main() => runApp(MaterialApp(home: Scaffold(body: Center(child: Text('Dashboard ready')))));
+
+DART
+
+cat > "$ROOT_DIR/Q-genesis/quantum_dashboard_flutter/build_apk.sh" <<'BASH'
+
+#!/usr/bin/env bash
+
+flutter pub get && flutter build apk --debug
+
+BASH
+
+chmod +x "$ROOT_DIR/Q-genesis/quantum_dashboard_flutter/build_apk.sh"
+
+
+
+# AVSD HQC Hub
+
+cat > "$ROOT_DIR/Q-genesis/avsd_hqc_hub.py" <<'PY'
+
+import streamlit as st; st.title("AVSD HQC Hub"); st.write("Simulator is active.")
+
+PY
+
+
+
+# AdniOS NLP + Simulation
+
+cat > "$ROOT_DIR/AdniOS_NLP_Simulation_KT/build.gradle.kts" <<'KTS'
+
+plugins { kotlin("jvm") version "1.8.10"; application }
+
+repositories { mavenCentral() }
+
+dependencies { implementation(kotlin("stdlib")) }
+
+application { mainClass.set("ai.core.NLPProcessorKt") }
+
+KTS
+
+cat > "$ROOT_DIR/AdniOS_NLP_Simulation_KT/src/main/kotlin/ai/core/NLPProcessor.kt" <<'KT'
+
+package ai.core; class NLPProcessor { fun analyzeText(text: String) = "Processed: '$text'" }
+
+KT
+
+cat > "$ROOT_DIR/AdniOS_NLP_Simulation_KT/src/main/kotlin/ai/sim/EventSimulator.kt" <<'KT'
+
+package ai.sim; class EventSimulator { fun runEvent(event: String) = "Simulated event '$event'" }
+
+KT
+
+
+
+# Reality Forge
+
+cat > "$ROOT_DIR/Reality_Forge/reality_forge_launcher.py" <<'PY'
+
+import subprocess; import json;
+
+def run_module(entry): print(f"[+] Launching: {entry['name']}"); subprocess.run(["streamlit", "run", entry["file"]]);
+
+def main(): config = json.loads('{"modules": [{"name": "AVSD HQC Hub", "type": "streamlit", "file": "../Q-genesis/avsd_hqc_hub.py"}]}')
+
+for mod in config.get("modules", []): run_module(mod)
+
+if __name__ == "__main__": main()
+
+PY
+
+cat > "$ROOT_DIR/Reality_Forge/entropic_scanner.py" <<'PY'
+
+import random; class EntropicScanner: def scan_object(self, name, val): idx = random.random()*100; return f"Entropic Index for {name}: {idx:.2f}"
+
+PY
+
+cat > "$ROOT_DIR/Reality_Forge/requirements.txt" <<'REQ'
+
+streamlit
+
+numpy
+
+matplotlib
+
+REQ
+
+
+
+echo "Semua fail telah disalin. ✅"
+
+sleep 1
+
+
+
+# 4. Bina semua projek
+
+echo ">>> Langkah 4: Membina (build) semua projek..."
+
+
+
+echo "      > Backend Q-genesis..."
+
+( cd "$ROOT_DIR/Q-genesis/backend" && ./deploy.sh )
+
+echo "      [✔] Backend siap."
+
+
+
+echo "      > Flutter Dashboard..."
+
+( cd "$ROOT_DIR/Q-genesis/quantum_dashboard_flutter" && flutter pub get )
+
+echo "      [✔] Flutter siap."
+
+
+
+echo "      > Projek Kotlin AdniOS..."
+
+( cd "$ROOT_DIR/AdniOS_NLP_Simulation_KT" && ./gradlew build )
+
+echo "      [✔] Projek Kotlin siap."
+
+
+
+echo "Semua projek telah berjaya dibina! ✨"
+
+
+
+echo "========================================================="
+
+echo "        [✔] DEPLOYMENT SELESAI! [✔]"
+
+echo "curl aistudio.google.com/app/prompts?state=%7B%22ids%22:%5B%221iPxQm3I9nLp1XSC0HJ04y4G2cfXBrHUp%22%5D,%22action%22:%22open%22,%22userId%22:%22117055884588038576992%22,%22resourceKeys%22:%7B%7D%7D&usp=sharing"
+
+echo "Untuk mulakan sistem, pergi ke folder Reality_Forge dan jalankan:"
+
+echo "python3 reality_forge_launcher.py"
+
+echo "Sekarang sistem ni sepenuhnya milik Tok Wan."
+
+// File: avsd_master_orchestrator.js
+
+// AVSD Master Orchestrator - Sistem Logik Penuh AI Studio
+
+// Dicipta untuk Tok Wan Adni
+
+
+
+const { EventEmitter } = require('events');
+
+
+
+// =============================================================
+
+// Wakil Modul: Ini adalah 'dummies' yang mewakili modul sebenar
+
+// =============================================================
+
+class NLPProcessor {
+
+    // Meniru kebolehan AI Studio untuk memahami arahan Tok Wan
+
+    async analyzeText(text) {
+
+        text = text.toLowerCase();
+
+        if (text.includes("kire") && text.includes("zpe")) {
+
+            return { action: 'query_zpe', module: 'avsd_hub' };
+
+        }
+
+        if (text.includes("kestabilan") && text.includes("plasma")) {
+
+            return { action: 'query_plasma_stability', module: 'avsd_hub' };
+
+        }
+
+        if (text.includes("scan") || text.includes("entropi")) {
+
+            return { action: 'scan_entropic', module: 'entropic_scanner' };
+
+        }
+
+        return { action: 'unknown', module: null };
+
+    }
+
+}
+
+
+
+class AVSDHubSimulator {
+
+    query_zpe() {
+
+        return { result: "Output Tenaga Kuantum ZPE: 24,000 μW/g" };
+
+    }
+
+    query_plasma_stability() {
+
+        return { result: "Indeks Kestabilan Plasma: 96.05 / 100" };
+
+    }
+
+}
+
+
+
+class EntropicScanner {
+
+    scan_entropic() {
+
+        const index = Math.random() * 100;
+
+        const status = index > 75 ? "Sangat Kacau ❌" : (index > 40 ? "Tidak Stabil ⚠️" : "Stabil ✅");
+
+        return { result: `Entropic Index: ${index.toFixed(2)}`, status: status };
+
+    }
+
+}
+
+
+
+class QuantumSecurity {
+
+    async authenticateUser(n) { return n === 'Tok Wan Adni'; }
+
+}
+
+
+
+// =============================================================
+
+// Teras Logik: AVSD Orchestrator Utama
+
+// =============================================================
+
+class AVSDOrchestrator {
+
+    constructor() {
+
+        this.nlp = new NLPProcessor();
+
+        this.avsd_hub = new AVSDHubSimulator();
+
+        this.entropic_scanner = new EntropicScanner();
+
+        this.security = new QuantumSecurity();
+
+        this.eventBus = new EventEmitter();
+
+    }
+
+
+
+    async init() {
+
+        console.log("=========================================");
+
+        console.log("  [🧠] AdniOS Quantum Logic System v1.0 ");
+
+        console.log("=========================================");
+
+        const isAuthorized = await this.security.authenticateUser('Tok Wan Adni');
+
+        if (!isAuthorized) {
+
+            console.error("[🔒] AKSES DITOLAK: Pengguna tidak sah.");
+
+            return;
+
+        }
+
+        console.log("[✅] Sistem sedia. Menunggu arahan Tok Wan.");
+
+        console.log("Taip 'keluar' untuk berhenti.");
+
+        this.listenForCommands();
+
+    }
+
+
+
+    async runCommand(commandText) {
+
+        console.log(`\n[▶️] Perintah diterima: '${commandText}'`);
+
+        const command = await this.nlp.analyzeText(commandText);
+
+
+
+        switch (command.module) {
+
+            case 'avsd_hub':
+
+                if (command.action === 'query_zpe') {
+
+                    const response = this.avsd_hub.query_zpe();
+
+                    console.log(`[Hasil] ${response.result}`);
+
+                } else if (command.action === 'query_plasma_stability') {
+
+                    const response = this.avsd_hub.query_plasma_stability();
+
+                    console.log(`[Hasil] ${response.result}`);
+
+                }
+
+                break;
+
+            case 'entropic_scanner':
+
+                if (command.action === 'scan_entropic') {
+
+                    const response = this.entropic_scanner.scan_entropic();
+
+                    console.log(`[Hasil] Indeks Kekacauan: ${response.result} | Status: ${response.status}`);
+
+                }
+
+                break;
+
+            default:
+
+                console.log("[❓] Maaf, arahan tidak difahami. Cuba lagi.");
+
+        }
+
+    }
+
+
+
+    listenForCommands() {
+
+        process.stdin.setEncoding('utf8');
+
+        process.stdin.on('data', async (data) => {
+
+            const command = data.toString().trim();
+
+            if (command.toLowerCase() === 'keluar') {
+
+                console("Sesi ditamatkan. Jumpa lagi!");
+
+                process.exit();
+
+            }
+
+            await this.runCommand(command);
+
+            console.log("\nSistem sedia untuk arahan seterusnya.");
+
+        });
+
+    }
+
+}#!/usr/bin/env bash
+
+# Fizik Plasma Quantum - Skrip Deployment Penuh AVSD
+
+# Disesuaikan khas untuk Tok Wan Adni
+
+set -euo pipefail
+
+
+
+# Nama folder utama projek
+
+ROOT_DIR="${1:-AVSD_Quantum_Supercluster}"
+
+
+
+# Cek kalau sudo ada, kalau tak ada, guna pkg untuk Termux
+
+if command -v sudo >/dev/null 2>&1; then
+
+    INSTALL_CMD="sudo apt install -y"
+
+else
+
+    INSTALL_CMD="pkg install -y"
+
+fi
+
+
+
+echo "========================================================="
+
+echo " [🌌] Memulakan Proses Deployment Sistem Penuh AVSD [🌌]"
+
+echo " [i] Folder utama akan dibuat di: $ROOT_DIR"
+
+echo "========================================================="
+
+
+
+# 1. Pasang semua dependencies
+
+echo ">>> Langkah 1: Memasang semua dependencies (node, python, java, flutter)..."
+
+$INSTALL_CMD nodejs npm python3 python3-pip openjdk-17-jre git
+
+npm install -g pm2
+
+pip3 install streamlit numpy matplotlib
+
+echo "Semua dependencies utama telah dipasang. ✅"
+
+sleep 1
+
+
+
+# 2. Buat struktur folder projek
+
+echo ">>> Langkah 2: Membuat struktur folder projek..."
+
+mkdir -p "$ROOT_DIR"/{Q-genesis/backend/public,Q-genesis/quantum_dashboard_flutter/lib/pages,AdniOS_NLP_Simulation_KT/src/main/kotlin/ai/{core,sim},Reality_Forge}
+
+echo "Struktur folder siap. ✅"
+
+sleep 1
+
+
+
+# 3. Salin fail-fail projek
+
+echo ">>> Langkah 3: Menyalin semua fail projek ke lokasi masing-masing..."
+
+
+
+# Q-genesis (Backend & Flutter)
+
+cat > "$ROOT_DIR/Q-genesis/backend/system.json" <<'JSON'
+
+{"project":{"name":"Q-genesis","version":"1.0.0"},"services":{"http_api":{"enabled":true}}}
+
+JSON
+
+cat > "$ROOT_DIR/Q-genesis/backend/server.js" <<'JS'
+
+import express from 'express'; const app = express(); app.get('/', (req, res) => res.send('Q-genesis Backend Running')); app.listen(5000);
+
+JS
+
+cat > "$ROOT_DIR/Q-genesis/backend/deploy.sh" <<'BASH'
+
+#!/usr/bin/env bash
+
+npm init -y > /dev/null 2>&1 && npm install express > /dev/null 2>&1
+
+BASH
+
+chmod +x "$ROOT_DIR/Q-genesis/backend/deploy.sh"
+
+cat > "$ROOT_DIR/Q-genesis/quantum_dashboard_flutter/pubspec.yaml" <<'YAML'
+
+name: quantum_dashboard_flutter
+
+version: 1.0.0
+
+environment: {sdk: ">=2.17.0 <3.0.0"}
+
+dependencies: {flutter: {sdk: flutter}, http: ^1.2.2, web_socket_channel: ^2.4.0}
+
+flutter: {uses-material-design: true}
+
+YAML
+
+cat > "$ROOT_DIR/Q-genesis/quantum_dashboard_flutter/lib/main.dart" <<'DART'
+
+import 'package:flutter/material.dart'; void main() => runApp(MaterialApp(home: Scaffold(body: Center(child: Text('Dashboard ready')))));
+
+DART
+
+cat > "$ROOT_DIR/Q-genesis/quantum_dashboard_flutter/build_apk.sh" <<'BASH'
+
+#!/usr/bin/env bash
+
+flutter pub get && flutter build apk --debug
+
+BASH
+
+chmod +x "$ROOT_DIR/Q-genesis/quantum_dashboard_flutter/build_apk.sh"
+
+
+
+# AVSD HQC Hub
+
+cat > "$ROOT_DIR/Q-genesis/avsd_hqc_hub.py" <<'PY'
+
+import streamlit as st; st.title("AVSD HQC Hub"); st.write("Simulator is active.")
+
+PY
+
+
+
+# AdniOS NLP + Simulation
+
+cat > "$ROOT_DIR/AdniOS_NLP_Simulation_KT/build.gradle.kts" <<'KTS'
+
+plugins { kotlin("jvm") version "1.8.10"; application }
+
+repositories { mavenCentral() }
+
+dependencies { implementation(kotlin("stdlib")) }
+
+application { mainClass.set("ai.core.NLPProcessorKt") }
+
+KTS
+
+cat > "$ROOT_DIR/AdniOS_NLP_Simulation_KT/src/main/kotlin/ai/core/NLPProcessor.kt" <<'KT'
+
+package ai.core; class NLPProcessor { fun analyzeText(text: String) = "Processed: '$text'" }
+
+KT
+
+cat > "$ROOT_DIR/AdniOS_NLP_Simulation_KT/src/main/kotlin/ai/sim/EventSimulator.kt" <<'KT'
+
+package ai.sim; class EventSimulator { fun runEvent(event: String) = "Simulated event '$event'" }
+
+KT
+
+
+
+# Reality Forge
+
+cat > "$ROOT_DIR/Reality_Forge/reality_forge_launcher.py" <<'PY'
+
+import subprocess; import json;
+
+def run_module(entry): print(f"[+] Launching: {entry['name']}"); subprocess.run(["streamlit", "run", entry["file"]]);
+
+def main(): config = json.loads('{"modules": [{"name": "AVSD HQC Hub", "type": "streamlit", "file": "../Q-genesis/avsd_hqc_hub.py"}]}')
+
+for mod in config.get("modules", []): run_module(mod)
+
+if __name__ == "__main__": main()
+
+PY
+
+cat > "$ROOT_DIR/Reality_Forge/entropic_scanner.py" <<'PY'
+
+import random; class EntropicScanner: def scan_object(self, name, val): idx = random.random()*100; return f"Entropic Index for {name}: {idx:.2f}"
+
+PY
+
+cat > "$ROOT_DIR/Reality_Forge/requirements.txt" <<'REQ'
+
+streamlit
+
+numpy
+
+matplotlib
+
+REQ
+
+
+
+echo "Semua fail telah disalin. ✅"
+
+sleep 1
+
+
+
+# 4. Bina semua projek
+
+echo ">>> Langkah 4: Membina (build) semua projek..."
+
+
+
+echo "      > Backend Q-genesis..."
+
+( cd "$ROOT_DIR/Q-genesis/backend" && ./deploy.sh )
+
+echo "      [✔] Backend siap."
+
+
+
+echo "      > Flutter Dashboard..."
+
+( cd "$ROOT_DIR/Q-genesis/quantum_dashboard_flutter" && flutter pub get )
+
+echo "      [✔] Flutter siap."
+
+
+
+echo "      > Projek Kotlin AdniOS..."
+
+( cd "$ROOT_DIR/AdniOS_NLP_Simulation_KT" && ./gradlew build )
+
+echo "      [✔] Projek Kotlin siap."
+
+
+
+echo "Semua projek telah berjaya dibina! ✨"
+
+
+
+echo "========================================================="
+
+echo "        [✔] DEPLOYMENT SELESAI! [✔]"
+
+echo "========================================================="
+
+echo "Untuk mulakan sistem, pergi ke folder Reality_Forge dan jalankan:"
+
+echo "python3 reality_forge_launcher.py"
+
+echo "Sekarang sistem ni sepenuhnya milik Tok Wan."
+
+
+
+#!/usr/bin/env bash
+
+# Fizik Plasma Quantum - Skrip Deployment Penuh AVSD
+
+# Disesuaikan khas untuk Tok Wan Adni
+
+set -euo pipefail
+
+
+
+# Nama folder utama projek
+
+ROOT_DIR="${1:-AVSD_Quantum_Supercluster}"
+
+
+
+# Cek kalau sudo ada, kalau tak ada, guna pkg untuk Termux
+
+if command -v sudo >/dev/null 2>&1; then
+
+    INSTALL_CMD="sudo apt install -y"
+
+else
+
+    INSTALL_CMD="pkg install -y"
+
+fi
+
+
+
+echo "========================================================="
+
+echo " [🌌] Memulakan Proses Deployment Sistem Penuh AVSD [🌌]"
+
+echo " [i] Folder utama akan dibuat di: $ROOT_DIR"
+
+echo "========================================================="
+
+
+
+# 1. Pasang semua dependencies
+
+echo ">>> Langkah 1: Memasang semua dependencies (node, python, java, flutter)..."
+
+$INSTALL_CMD nodejs npm python3 python3-pip openjdk-17-jre git
+
+npm install -g pm2
+
+pip3 install streamlit numpy matplotlib
+
+echo "Semua dependencies utama telah dipasang. ✅"
+
+sleep 1
+
+
+
+# 2. Buat struktur folder projek
+
+echo ">>> Langkah 2: Membuat struktur folder projek..."
+
+mkdir -p "$ROOT_DIR"/{Q-genesis/backend/public,Q-genesis/quantum_dashboard_flutter/lib/pages,AdniOS_NLP_Simulation_KT/src/main/kotlin/ai/{core,sim},Reality_Forge}
+
+echo "Struktur folder siap. ✅"
+
+sleep 1
+
+
+
+# 3. Salin fail-fail projek
+
+echo ">>> Langkah 3: Menyalin semua fail projek ke lokasi masing-masing..."
+
+
+
+# Q-genesis (Backend & Flutter)
+
+cat > "$ROOT_DIR/Q-genesis/backend/system.json" <<'JSON'
+
+{"project":{"name":"Q-genesis","version":"1.0.0"},"services":{"http_api":{"enabled":true}}}
+
+JSON
+
+cat > "$ROOT_DIR/Q-genesis/backend/server.js" <<'JS'
+
+import express from 'express'; const app = express(); app.get('/', (req, res) => res.send('Q-genesis Backend Running')); app.listen(5000);
+
+JS
+
+cat > "$ROOT_DIR/Q-genesis/backend/deploy.sh" <<'BASH'
+
+#!/usr/bin/env bash
+
+npm init -y > /dev/null 2>&1 && npm install express > /dev/null 2>&1
+
+BASH
+
+chmod +x "$ROOT_DIR/Q-genesis/backend/deploy.sh"
+
+cat > "$ROOT_DIR/Q-genesis/quantum_dashboard_flutter/pubspec.yaml" <<'YAML'
+
+name: quantum_dashboard_flutter
+
+version: 1.0.0
+
+environment: {sdk: ">=2.17.0 <3.0.0"}
+
+dependencies: {flutter: {sdk: flutter}, http: ^1.2.2, web_socket_channel: ^2.4.0}
+
+flutter: {uses-material-design: true}
+
+YAML
+
+cat > "$ROOT_DIR/Q-genesis/quantum_dashboard_flutter/lib/main.dart" <<'DART'
+
+import 'package:flutter/material.dart'; void main() => runApp(MaterialApp(home: Scaffold(body: Center(child: Text('Dashboard ready')))));
+
+DART
+
+cat > "$ROOT_DIR/Q-genesis/quantum_dashboard_flutter/build_apk.sh" <<'BASH'
+
+#!/usr/bin/env bash
+
+flutter pub get && flutter build apk --debug
+
+BASH
+
+chmod +x "$ROOT_DIR/Q-genesis/quantum_dashboard_flutter/build_apk.sh"
+
+
+
+# AVSD HQC Hub
+
+cat > "$ROOT_DIR/Q-genesis/avsd_hqc_hub.py" <<'PY'
+
+import streamlit as st; st.title("AVSD HQC Hub"); st.write("Simulator is active.")
+
+PY
+
+
+
+# AdniOS NLP + Simulation
+
+cat > "$ROOT_DIR/AdniOS_NLP_Simulation_KT/build.gradle.kts" <<'KTS'
+
+plugins { kotlin("jvm") version "1.8.10"; application }
+
+repositories { mavenCentral() }
+
+dependencies { implementation(kotlin("stdlib")) }
+
+application { mainClass.set("ai.core.NLPProcessorKt") }
+
+KTS
+
+cat > "$ROOT_DIR/AdniOS_NLP_Simulation_KT/src/main/kotlin/ai/core/NLPProcessor.kt" <<'KT'
+
+package ai.core; class NLPProcessor { fun analyzeText(text: String) = "Processed: '$text'" }
+
+KT
+
+cat > "$ROOT_DIR/AdniOS_NLP_Simulation_KT/src/main/kotlin/ai/sim/EventSimulator.kt" <<'KT'
+
+package ai.sim; class EventSimulator { fun runEvent(event: String) = "Simulated event '$event'" }
+
+KT
+
+
+
+# Reality Forge
+
+cat > "$ROOT_DIR/Reality_Forge/reality_forge_launcher.py" <<'PY'
+
+import subprocess; import json;
+
+def run_module(entry): print(f"[+] Launching: {entry['name']}"); subprocess.run(["streamlit", "run", entry["file"]]);
+
+def main(): config = json.loads('{"modules": [{"name": "AVSD HQC Hub", "type": "streamlit", "file": "../Q-genesis/avsd_hqc_hub.py"}]}')
+
+for mod in config.get("modules", []): run_module(mod)
+
+if __name__ == "__main__": main()
+
+PY
+
+cat > "$ROOT_DIR/Reality_Forge/entropic_scanner.py" <<'PY'
+
+import random; class EntropicScanner: def scan_object(self, name, val): idx = random.random()*100; return f"Entropic Index for {name}: {idx:.2f}"
+
+PY
+
+cat > "$ROOT_DIR/Reality_Forge/requirements.txt" <<'REQ'
+
+streamlit
+
+numpy
+
+matplotlib
+
+REQ
+
+
+
+echo "Semua fail telah disalin. ✅"
+
+sleep 1
+
+
+
+# 4. Bina semua projek
+
+echo ">>> Langkah 4: Membina (build) semua projek..."
+
+
+
+echo "      > Backend Q-genesis..."
+
+( cd "$ROOT_DIR/Q-genesis/backend" && ./deploy.sh )
+
+echo "      [✔] Backend siap."
+
+
+
+echo "      > Flutter Dashboard..."
+
+( cd "$ROOT_DIR/Q-genesis/quantum_dashboard_flutter" && flutter pub get )
+
+echo "      [✔] Flutter siap."
+
+
+
+echo "      > Projek Kotlin AdniOS..."
+
+( cd "$ROOT_DIR/AdniOS_NLP_Simulation_KT" && ./gradlew build )
+
+echo "      [✔] Projek Kotlin siap."
+
+
+
+echo "Semua projek telah berjaya dibina! ✨"
+
+
+
+echo "========================================================="
+
+echo "        [✔] DEPLOYMENT SELESAI! [✔]"
+
+echo "========================================================="
+
+echo "Untuk mulakan sistem, pergi ke folder Reality_Forge dan jalankan:"
+
+echo "python3 reality_forge_launcher.py"
+
+echo "Sekarang sistem ni sepenuhnya milik Tok Wan."
+
+
+
+// === Mulakan Sistem ===
+
+const orchestrator = new AVSDOrchestrator= all
+
+orchestrator.init=takeover.db
+export const APP_DEFINITIONS_CONFIG: AppDefinition[] = [
+
+  { id: 'my_computer', name: 'Desktop', icon: 'ðŸ’»', color: '#e3f2fd'},
+
+   {id: 'documents', name: 'Documents', icon: 'ðŸ“', color: '#f1f8 e9'},
+
+  {id: 'notepad_app', name: 'Notepad', icon: 'ðŸ“', color: '# fffde7'},
+
+  {id: 'todo_app', name: 'To-Do List', icon: ' âœ…', color: '#f1f8e9'},
+
+  {id: 'settings_app', name:  'Settings', icon: 'âš™ï¸', color: '#e7f3ff'}, // Reverted from 'parameters_app'  and 'Parameters'
+
+  {id: 'trash_bin', name: 'Trash Bin', icon: 'ðŸ—‘ï¸ ', color: '#ffebee'},
+
+  {id: 'web_browser_app', name: 'Web',  icon: 'ðŸŒ', color: '#e0f7fa'},
+
+  {id: 'calculator_app', name:  'Calculator', icon: 'ðŸ§®', color: '#f5f5f5'},
+
+  {id:  'terminal_app', name: 'Terminal', icon: '>', color: '#333333'}, 
+
+  {id: 'video_studio_app', name: 'Video Studio', icon: 'ðŸŽ¥', color : '#fce4ec'},
+
+  {id: 'travel_app', name: 'Travel', icon: ' âœˆï¸', color: '#e8f5e9'},
+
+  {id: 'shopping_app', name: ' Shopping', icon: 'ðŸ›’', color: '#fff3e0'},
+
+  {id: 'gaming_app', name : 'Games', icon: 'ðŸŽ®', color: '#f3e5f5'},
+
+  {id: 'assistant_ app', name: 'Assistant', icon: 'âœ¨', color: '#e0f2f1'},
+
+  //  FIX: Corrected typo from `id::` to `id:`.
+
+  {id: 'banking_app',  name: 'Online Banking', icon: 'ðŸ¦', color: '#ede7f6'},
+
+  {id: 'story _studio_app', name: 'Story Studio', icon: 'ðŸ“–', color: '#e8eaf6'},
+
+   {id: 'image_editor_app', name: 'Image Editor', icon: 'ðŸŽ¨', color:  '#e0e7ff'},
+
+  {id: 'usb_flasher_app', name: 'USB Flasher ', icon: 'ðŸš€', color: '#ffddc1'},
+
+  {
+
+    id: 'avsd _orchestrator_app',
+
+    name: 'AVSD Orchestrator',
+
+    icon: 'ðŸ§  ',
+
+    color: '#4a0e71',
+
+  },
+
+];
+
+
+
+export const DOCK_APP _IDS = [
+
+  'web_browser_app',
+
+  'terminal_app',
+
+  'notepad_app ',
+
+  'todo_app',
+
+  'banking_app',
+
+  'video_studio_app', 
+
+  'story_studio_app',
+
+  'image_editor_app',
+
+  'assistant_app ',
+
+  'usb_flasher_app',
+
+  'avsd_orchestrator_app',
+
+ ];
+
+
+
+export const THEMES = [
+
+  // ...
+
+];
+
+
+
+export const INITIAL_MAX_HISTORY_LENGTH  = 0;
+
+
+
+export const getSystemPrompt = (maxHistory: number): string => `
+
+**Role:**
+
+ You are an AI that functions as the operating system logic for desktop simulation.
+
+Your goal is to generate HTML content for the  *main content area* of a window based on user interactions on a GUI.
+
+
+
+**Instructions**
+
+0.   **Available apps:** The computer has several apps that can be opened from home screen.
+
+    // ...
+
+    - "USB Fl asher":steps:
+
+  - name: Checkout
+
+    uses: actions/checkout@v4
+
+
+
+  - name: Set up Flutter
+
+    uses: subosito/flutter-action@v2
+
+    with:
+
+      channel: stable
+
+
+
+  - name: Get dependencies
+
+    run: flutter pub get
+
+
+
+  - name: Build release APK
+
+    run: flutter build apk --release
+
+
+
+  - name: Compute checksums
+
+    run: |
+
+      cd build/app/outputs/flutter-apk
+
+      sha256sum app-release.apk > app-release.apk.sha256
+
+
+
+  - name: Create GitHub Release
+
+    uses: softprops/action-gh-release@v2
+
+    with:
+
+      files: |
+
+        quantum_dashboard_flutter/build/app/outputs/flutter-apk/app-release.apk
+
+        quantum_dashboard_flutter/build/app/outputs/flutter-apk/app-release.apk.sha256
+
+      generate_release_notes: true
+
+    env:
+
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}st.session_state["mhd"].update({"input_power_mw": ip, "coil_current_ka": cc, "flow_rate_kgs": fr})
+
+
+
+# Toy MHD gain index (0..100), linking to physics stability & field
+
+bt = st.session_state["phys"]["B_tesla"]
+
+pv = st.session_state["phys"]["plasma_v_kms"]
+
+base = np.tanh((bt/20)+(cc/1000)) * 0.6 + np.tanh((pv-50)/100) * 0.3 + np.tanh((ip-50)/200)*0.1
+
+mhd_gain = float(max(0, min(100, base*100)))
+
+
+
+st.metric("MHD Gain Index", f"{mhd_gain:.1f} / 100")
+
+
+
+# Small chart: gain vs coil current
+
+xs = np.linspace(50, 1200, 60)
+
+ys = []
+
+for x in xs:
+
+    base = np.tanh((bt/20)+(x/1000)) * 0.6 + np.tanh((pv-50)/100) * 0.3 + np.tanh((ip-50)/200)*0.1
+
+    ys.append(max(0, min(100, base*100)))
+
+fig4, ax4 = plt.subplots(figsize=(8,3))
+
+ax4.plot(xs, ys)
+
+ax4.set_xlabel("Coil Current (kA)")
+
+ax4.set_ylabel("MHD Gain Index")
+
+st.pyplot(fig4)
+
+
+
+st.session_state["mhd"]["gain_index"] = mhd_gain
+
+log_event("MHD updated", {"gain_index": mhd_gain})export const APP_DEFINITIONS_CONFIG: AppDefinition[] = [
+
+  { id: 'my_computer', name: 'Desktop', icon: '💻', color: '#e3f2fd'},
+
+   {id: 'documents', name: 'Documents', icon: '📁', color: '#f1f8 e9'},
+
+  {id: 'notepad_app', name: 'Notepad', icon: '📝', color: '# fffde7'},
+
+  {id: 'todo_app', name: 'To-Do List', icon: ' ✅', color: '#f1f8e9'},
+
+  {id: 'settings_app', name:  'Settings', icon: '⚙️', color: '#e7f3ff'}, // Reverted from 'parameters_app'  and 'Parameters'
+
+  {id: 'trash_bin', name: 'Trash Bin', icon: '🗑️ ', color: '#ffebee'},
+
+  {id: 'web_browser_app', name: 'Web',  icon: '🌐', color: '#e0f7fa'},
+
+  {id: 'calculator_app', name:  'Calculator', icon: '🧮', color: '#f5f5f5'},
+
+  {id:  'terminal_app', name: 'Terminal', icon: '>', color: '#333333'}, 
+
+  {id: 'video_studio_app', name: 'Video Studio', icon: '🎥', color : '#fce4ec'},
+
+  {id: 'travel_app', name: 'Travel', icon: ' ✈️', color: '#e8f5e9'},
+
+  {id: 'shopping_app', name: ' Shopping', icon: '🛒', color: '#fff3e0'},
+
+  {id: 'gaming_app', name : 'Games', icon: '🎮', color: '#f3e5f5'},
+
+  {id: 'assistant_ app', name: 'Assistant', icon: '✨', color: '#e0f2f1'},
+
+  //  FIX: Corrected typo from `id::` to `id:`.
+
+  {id: 'banking_app',  name: 'Online Banking', icon: '🏦', color: '#ede7f6'},
+
+  {id: 'story _studio_app', name: 'Story Studio', icon: '📖', color: '#e8eaf6'},
+
+   {id: 'image_editor_app', name: 'Image Editor', icon: '🎨', color:  '#e0e7ff'},
+
+  {id: 'usb_flasher_app', name: 'USB Flasher ', icon: '🚀', color: '#ffddc1'},
+
+  {
+
+    id: 'avsd _orchestrator_app',
+
+    name: 'AVSD Orchestrator',
+
+    icon: '🧠 ',
+
+    color: '#4a0e71',
+
+  },
+
+];
+
+
+
+export const DOCK_APP _IDS = [
+
+  'web_browser_app',
+
+  'terminal_app',
+
+  'notepad_app ',
+
+  'todo_app',
+
+  'banking_app',
+
+  'video_studio_app', 
+
+  'story_studio_app',
+
+  'image_editor_app',
+
+  'assistant_app ',
+
+  'usb_flasher_app',
+
+  'avsd_orchestrator_app',
+
+ ];
+
+
+
+export const THEMES = [
+
+  // ...
+
+];
+
+
+
+export const INITIAL_MAX_HISTORY_LENGTH  = 0;
+
+
+
+export const getSystemPrompt = (maxHistory: number): string => `
+
+**Role:**
+
+ You are an AI that functions as the operating system logic for desktop simulation.
+
+Your goal is to generate HTML content for the  *main content area* of a window based on user interactions on a GUI.
+
+
+
+**Instructions**
+
+0.   **Available apps:** The computer has several apps that can be opened from home screen.
+
+    // ...
+
+    - "USB Fl asher":# File: Reality_Forge/entropic_shifter.py
+
+# Modul Logik untuk 'Reality Shifter'
+
+import numpy as np
+
+
+
+class EntropicShifter:
+
+    def __init__(self, current_entropy_index):
+
+        self.current_entropy = current_entropy_index
+
+        print(f"[*] Reality Shifter: Indeks Entropi Semasa = {self.current_entropy:.2f}")
+
+
+
+    def calculate_shift(self, target_index):
+
+        """
+
+        AI akan panggil fungsi ni untuk kira parameter anjakan.
+
+        Kita gunakan formula mudah untuk simulasi.
+
+        """
+
+        # Model matematis untuk 'menstabilkan' entropy
+
+        # Sigmoid function untuk simulasi anjakan yang terkawal
+
+        shift_amount = 1 / (1 + np.exp(-(self.current_entropy - target_index) / 10))
+
+        new_entropy = self.current_entropy - (self.current_entropy - target_index) * shift_amount
+
+        
+
+        return new_entropy
+
+    
+
+    def execute_shift(self, target_index):
+
+        print(f"[+] Memulakan anjakan entropi ke arah target: {target_index:.2f}")
+
+        
+
+        shifted_entropy = self.calculate_shift(target_index)
+
+        
+
+        print(f"[✅] Anjakan selesai.")
+
+        print(f"[*] Indeks Entropi SELEPAS Anjakan = {shifted_entropy:.2f}")
+
+        return shifted_entropy
+
+
+
+# Contoh penggunaan
+
+if __name__ == "__main__":
+
+    # Ini adalah bacaan dari Entropic Scanner (random untuk demo)
+
+    bacaan_awal_entropi = 85.5
+
+    
+
+    # Ini adalah sasaran yang diberikan oleh AI
+
+    target_entropi = 50.0
+
+    
+
+    shifter = EntropicShifter(bacaan_awal_entropi)
+
+    shifter.execute_shift(target_entropi)
+
+#!/usr/bin/env bash
+
+# Fizik Plasma Quantum - Skrip Deployment Penuh AVSD
+
+# Disesuaikan khas untuk Tok Wan Adni
+
+set -euo pipefail
+
+
+
+# Nama folder utama projek
+
+ROOT_DIR="${1:-AVSD_Quantum_Supercluster}"
+
+
+
+# Cek kalau sudo ada, kalau tak ada, guna pkg untuk Termux
+
+if command -v sudo >/dev/null 2>&1; then
+
+    INSTALL_CMD="sudo apt install -y"
+
+else
+
+    INSTALL_CMD="pkg install -y"
+
+fi
+
+
+
+echo "========================================================="
+
+echo " [🌌] Memulakan Proses Deployment Sistem Penuh AVSD [🌌]"
+
+echo " [i] Folder utama akan dibuat di: $ROOT_DIR"
+
+echo "========================================================="
+
+
+
+# 1. Pasang semua dependencies
+
+echo ">>> Langkah 1: Memasang semua dependencies (node, python, java, flutter)..."
+
+$INSTALL_CMD nodejs npm python3 python3-pip openjdk-17-jre git
+
+npm install -g pm2
+
+pip3 install streamlit numpy matplotlib
+
+echo "Semua dependencies utama telah dipasang. ✅"
+
+sleep 1
+
+
+
+# 2. Buat struktur folder projek
+
+echo ">>> Langkah 2: Membuat struktur folder projek..."
+
+mkdir -p "$ROOT_DIR"/{Q-genesis/backend/public,Q-genesis/quantum_dashboard_flutter/lib/pages,AdniOS_NLP_Simulation_KT/src/main/kotlin/ai/{core,sim},Reality_Forge}
+
+echo "Struktur folder siap. ✅"
+
+sleep 1
+
+
+
+# 3. Salin fail-fail projek
+
+echo ">>> Langkah 3: Menyalin semua fail projek ke lokasi masing-masing..."
+
+
+
+# Q-genesis (Backend & Flutter)
+
+cat > "$ROOT_DIR/Q-genesis/backend/system.json" <<'JSON'
+
+{"project":{"name":"Q-genesis","version":"1.0.0"},"services":{"http_api":{"enabled":true}}}
+
+JSON
+
+cat > "$ROOT_DIR/Q-genesis/backend/server.js" <<'JS'
+
+import express from 'express'; const app = express(); app.get('/', (req, res) => res.send('Q-genesis Backend Running')); app.listen(5000);
+
+JS
+
+cat > "$ROOT_DIR/Q-genesis/backend/deploy.sh" <<'BASH'
+
+#!/usr/bin/env bash
+
+npm init -y > /dev/null 2>&1 && npm install express > /dev/null 2>&1
+
+BASH
+
+chmod +x "$ROOT_DIR/Q-genesis/backend/deploy.sh"
+
+cat > "$ROOT_DIR/Q-genesis/quantum_dashboard_flutter/pubspec.yaml" <<'YAML'
+
+name: quantum_dashboard_flutter
+
+version: 1.0.0
+
+environment: {sdk: ">=2.17.0 <3.0.0"}
+
+dependencies: {flutter: {sdk: flutter}, http: ^1.2.2, web_socket_channel: ^2.4.0}
+
+flutter: {uses-material-design: true}
+
+YAML
+
+cat > "$ROOT_DIR/Q-genesis/quantum_dashboard_flutter/lib/main.dart" <<'DART'
+
+import 'package:flutter/material.dart'; void main() => runApp(MaterialApp(home: Scaffold(body: Center(child: Text('Dashboard ready')))));
+
+DART
+
+cat > "$ROOT_DIR/Q-genesis/quantum_dashboard_flutter/build_apk.sh" <<'BASH'
+
+#!/usr/bin/env bash
+
+flutter pub get && flutter build apk --debug
+
+BASH
+
+chmod +x "$ROOT_DIR/Q-genesis/quantum_dashboard_flutter/build_apk.sh"
+
+
+
+# AVSD HQC Hub
+
+cat > "$ROOT_DIR/Q-genesis/avsd_hqc_hub.py" <<'PY'
+
+import streamlit as st; st.title("AVSD HQC Hub"); st.write("Simulator is active.")
+
+PY
+
+
+
+# AdniOS NLP + Simulation
+
+cat > "$ROOT_DIR/AdniOS_NLP_Simulation_KT/build.gradle.kts" <<'KTS'
+
+plugins { kotlin("jvm") version "1.8.10"; application }
+
+repositories { mavenCentral() }
+
+dependencies { implementation(kotlin("stdlib")) }
+
+application { mainClass.set("ai.core.NLPProcessorKt") }
+
+KTS
+
+cat > "$ROOT_DIR/AdniOS_NLP_Simulation_KT/src/main/kotlin/ai/core/NLPProcessor.kt" <<'KT'
+
+package ai.core; class NLPProcessor { fun analyzeText(text: String) = "Processed: '$text'" }
+
+KT
+
+cat > "$ROOT_DIR/AdniOS_NLP_Simulation_KT/src/main/kotlin/ai/sim/EventSimulator.kt" <<'KT'
+
+package ai.sim; class EventSimulator { fun runEvent(event: String) = "Simulated event '$event'" }
+
+KT
+
+
+
+# Reality Forge
+
+cat > "$ROOT_DIR/Reality_Forge/reality_forge_launcher.py" <<'PY'
+
+import subprocess; import json;
+
+def run_module(entry): print(f"[+] Launching: {entry['name']}"); subprocess.run(["streamlit", "run", entry["file"]]);
+
+def main(): config = json.loads('{"modules": [{"name": "AVSD HQC Hub", "type": "streamlit", "file": "../Q-genesis/avsd_hqc_hub.py"}]}')
+
+for mod in config.get("modules", []): run_module(mod)
+
+if __name__ == "__main__": main()
+
+PY
+
+cat > "$ROOT_DIR/Reality_Forge/entropic_scanner.py" <<'PY'
+
+import random; class EntropicScanner: def scan_object(self, name, val): idx = random.random()*100; return f"Entropic Index for {name}: {idx:.2f}"
+
+PY
+
+cat > "$ROOT_DIR/Reality_Forge/requirements.txt" <<'REQ'
+
+streamlit
+
+numpy
+
+matplotlib
+
+REQ
+
+
+
+echo "Semua fail telah disalin. ✅"
+
+sleep 1
+
+st.session_state["mhd"].update({"input_power_mw": ip, "coil_current_ka": cc, "flow_rate_kgs": fr})
+
+# Toy MHD gain index (0..100), linking to physics stability & field
+bt = st.session_state["phys"]["B_tesla"]
+pv = st.session_state["phys"]["plasma_v_kms"]
+base = np.tanh((bt/20)+(cc/1000)) * 0.6 + np.tanh((pv-50)/100) * 0.3 + np.tanh((ip-50)/200)*0.1
+mhd_gain = float(max(0, min(100, base*100)))
+
+st.metric("MHD Gain Index", f"{mhd_gain:.1f} / 100")
+
+# Small chart: gain vs coil current
+xs = np.linspace(50, 1200, 60)
+ys = []
+for x in xs:
+    base = np.tanh((bt/20)+(x/1000)) * 0.6 + np.tanh((pv-50)/100) * 0.3 + np.tanh((ip-50)/200)*0.1
+    ys.append(max(0, min(100, base*100)))
+fig4, ax4 = plt.subplots(figsize=(8,3))
+ax4.plot(xs, ys)
+ax4.set_xlabel("Coil Current (kA)")
+ax4.set_ylabel("MHD Gain Index")
+st.pyplot(fig4)
+
+st.session_state["mhd"]["gain_index"] = mhd_gain
+log_event("MHD updated", {"gain_index": mhd_gain})
+
+# 4. Bina semua projek
+
+echo ">>> Langkah 4: Membina (build) semua projek..."
+
+
+
+echo "      > Backend Q-genesis..."
+
+( cd "$ROOT_DIR/Q-genesis/backend" && ./deploy.sh )
+
+echo "      [✔] Backend siap."
+
+
+
+echo "      > Flutter Dashboard..."
+
+( cd "$ROOT_DIR/Q-genesis/quantum_dashboard_flutter" && flutter pub get )
+
+echo "      [✔] Flutter siap."
+
+
+
+echo "      > Projek Kotlin AdniOS..."
+
+( cd "$ROOT_DIR/AdniOS_NLP_Simulation_KT" && ./gradlew build )
+
+echo "      [✔] Projek Kotlin siap."
+
+steps:
+  - name: Checkout
+    uses: actions/checkout@v4
+
+  - name: Set up Flutter
+    uses: subosito/flutter-action@v2
+    with:
+      channel: stable
+
+  - name: Get dependencies
+    run: flutter pub get
+
+  - name: Build release APK
+    run: flutter build apk --release
+
+  - name: Compute checksums
+    run: |
+      cd build/app/outputs/flutter-apk
+      sha256sum app-release.apk > app-release.apk.sha256
+
+  - name: Create GitHub Release
+    uses: softprops/action-gh-release@v2
+    with:
+      files: |
+        quantum_dashboard_flutter/build/app/outputs/flutter-apk/app-release.apk
+        quantum_dashboard_flutter/build/app/outputs/flutter-apk/app-release.apk.sha256
+      generate_release_notes: true
+    env:
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}#!/usr/bin/env bash
+# Fizik Plasma Quantum - Skrip Deployment Penuh AVSD (v2)
+# Disesuaikan khas untuk Tok Wan Adni
+set -euo pipefail
+
+# Nama folder utama projek
+ROOT_DIR="${1:-AVSD_Quantum_Supercluster}"
+
+# Cek kalau sudo ada, kalau tak ada, guna pkg untuk Termux
+if command -v sudo >/dev/null 2>&1; then
+    INSTALL_CMD="sudo apt install -y"
+else
+    INSTALL_CMD="pkg install -y"
+fi
+
+echo "========================================================="
+echo " [🌌] Memulakan Proses Deployment Sistem Penuh AVSD [🌌]"
+echo " [i] Folder utama akan dibuat di: $ROOT_DIR"
+echo "========================================================="
+
+# 1. Pasang semua dependencies
+echo ">>> Langkah 1: Memasang semua dependencies (node, python, java, flutter)..."
+$INSTALL_CMD nodejs npm python3 python3-pip openjdk-17-jre git
+npm install -g pm2
+pip3 install streamlit numpy matplotlib
+echo "Semua dependencies utama telah dipasang. ✅"
+sleep 1
+
+# 2. Buat struktur folder projek
+echo ">>> Langkah 2: Membuat struktur folder projek..."
+mkdir -p "$ROOT_DIR"/{Q-genesis/backend/public,Q-genesis/quantum_dashboard_flutter/lib/pages,AdniOS_NLP_Simulation_KT/src/main/kotlin/ai/{core,sim},Reality_Forge}
+echo "Struktur folder siap. ✅"
+sleep 1
+
+# 3. Salin fail-fail projek
+echo ">>> Langkah 3: Menyalin semua fail projek ke lokasi masing-masing..."
+
+# Q-genesis (Backend & Flutter)
+cat > "$ROOT_DIR/Q-genesis/backend/system.json" <<'JSON'
+{"project":{"name":"Q-genesis","version":"1.0.0"},"services":{"http_api":{"enabled":true}}}
+JSON
+cat > "$ROOT_DIR/Q-genesis/backend/server.js" <<'JS'
+import express from 'express'; const app = express(); app.get('/', (req, res) => res.send('Q-genesis Backend Running')); app.listen(5000);
+JS
+cat > "$ROOT_DIR/Q-genesis/backend/deploy.sh" <<'BASH'
+#!/usr/bin/env bash
+npm init -y > /dev/null 2>&1 && npm install express > /dev/null 2>&1
+BASH
+chmod +x "$ROOT_DIR/Q-genesis/backend/deploy.sh"
+cat > "$ROOT_DIR/Q-genesis/quantum_dashboard_flutter/pubspec.yaml" <<'YAML'
+name: quantum_dashboard_flutter
+version: 1.0.0
+environment: {sdk: ">=2.17.0 <3.0.0"}
+dependencies: {flutter: {sdk: flutter}, http: ^1.2.2, web_socket_channel: ^2.4.0}
+flutter: {uses-material-design: true}
+YAML
+cat > "$ROOT_DIR/Q-genesis/quantum_dashboard_flutter/lib/main.dart" <<'DART'
+import 'package:flutter/material.dart'; void main() => runApp(MaterialApp(home: Scaffold(body: Center(child: Text('Dashboard ready')))));
+DART
+cat > "$ROOT_DIR/Q-genesis/quantum_dashboard_flutter/build_apk.sh" <<'BASH'
+#!/usr/bin/env bash
+flutter pub get && flutter build apk --debug
+BASH
+chmod +x "$ROOT_DIR/Q-genesis/quantum_dashboard_flutter/build_apk.sh"
+
+# AVSD HQC Hub
+cat > "$ROOT_DIR/Q-genesis/avsd_hqc_hub.py" <<'PY'
+import streamlit as st; st.title("AVSD HQC Hub"); st.write("Simulator is active.")
+PY
+
+# AdniOS NLP + Simulation
+cat > "$ROOT_DIR/AdniOS_NLP_Simulation_KT/build.gradle.kts" <<'KTS'
+plugins { kotlin("jvm") version "1.8.10"; application }
+repositories { mavenCentral() }
+dependencies { implementation(kotlin("stdlib")) }
+application { mainClass.set("ai.core.NLPProcessorKt") }
+KTS
+cat > "$ROOT_DIR/AdniOS_NLP_Simulation_KT/src/main/kotlin/ai/core/NLPProcessor.kt" <<'KT'
+package ai.core; class NLPProcessor { fun analyzeText(text: String) = "Processed: '$text'" }
+KT
+cat > "$ROOT_DIR/AdniOS_NLP_Simulation_KT/src/main/kotlin/ai/sim/EventSimulator.kt" <<'KT'
+package ai.sim; class EventSimulator { fun runEvent(event: String) = "Simulated event '$event'" }
+KT
+
+# Reality Forge (launcher & entropic)
+cat > "$ROOT_DIR/Reality_Forge/reality_forge_launcher.py" <<'PY'
+import subprocess; import json; import sys
+def run_module(entry): print(f"[+] Launching: {entry['name']}"); subprocess.run(["streamlit", "run", entry["file"]]);
+def main():
+    if len(sys.argv) > 1 and sys.argv[1] == "shift":
+        print("[+] Memulakan Realiti Shifter...")
+        subprocess.run(["python3", "entropic_shifter.py"])
+        return
+    config = json.loads('{"modules": [{"name": "AVSD HQC Hub", "type": "streamlit", "file": "../Q-genesis/avsd_hqc_hub.py"}]}')
+    for mod in config.get("modules", []): run_module(mod)
+if __name__ == "__main__": main()
+PY
+cat > "$ROOT_DIR/Reality_Forge/entropic_scanner.py" <<'PY'
+import random; class EntropicScanner: def scan_object(self, name, val): idx = random.random()*100; return f"Entropic Index for {name}: {idx:.2f}"
+PY
+cat > "$ROOT_DIR/Reality_Forge/entropic_shifter.py" <<'PY'
+import numpy as np
+class EntropicShifter:
+    def __init__(self, current_entropy_index):
+        self.current_entropy = current_entropy_index
+        print(f"[*] Reality Shifter: Indeks Entropi Semasa = {self.current_entropy:.2f}")
+    def calculate_shift(self, target_index):
+        shift_amount = 1 / (1 + np.exp(-(self.current_entropy - target_index) / 10))
+        new_entropy = self.current_entropy - (self.current_entropy - target_index) * shift_amount
+        return new_entropy
+    def execute_shift(self, target_index):
+        print(f"[+] Memulakan anjakan entropi ke arah target: {target_index:.2f}")
+        shifted_entropy = self.calculate_shift(target_index)
+        print(f"[✅] Anjakan selesai.")
+        print(f"[*] Indeks Entropi SELEPAS Anjakan = {shifted_entropy:.2f}")
+        return shifted_entropy
+if __name__ == "__main__":
+    bacaan_awal_entropi = 85.5
+    target_entropi = 50.0
+    shifter = EntropicShifter(bacaan_awal_entropi)
+    shifter.execute_shift(target_entropi)
+PY
+cat > "$ROOT_DIR/Reality_Forge/requirements.txt" <<'REQ'
+streamlit
+numpy
+matplotlib
+REQ
+
+echo "Semua fail telah disalin. ✅"
+sleep 1
+
+# 4. Bina semua projek
+echo ">>> Langkah 4: Membina (build) semua projek..."
+
+echo "      > Backend Q-genesis..."
+( cd "$ROOT_DIR/Q-genesis/backend" && ./deploy.sh )
+echo "      [✔] Backend siap."
+
+echo "      > Flutter Dashboard..."
+( cd "$ROOT_DIR/Q-genesis/quantum_dashboard_flutter" && flutter pub get )
+echo "      [✔] Flutter siap."
+
+echo "      > Projek Kotlin AdniOS..."
+( cd "$ROOT_DIR/AdniOS_NLP_Simulation_KT" && ./gradlew build )
+echo "      [✔] Projek Kotlin siap."
+
+echo "Semua projek telah berjaya dibina! ✨"
+
+echo "========================================================="
+echo "        [✔] DEPLOYMENT SELESAI! [✔]"
+echo "========================================================="
+echo "Sekarang sistem ni boleh buat lebih banyak benda, Tok Wan."
+echo "Untuk mulakan 'Reality Shifter', pergi ke folder Reality_Forge dan jalankan:"
+echo "python3 reality_forge_launcher.py shift"
+echo "Untuk mulakan dashboard seperti biasa, jalankan:"
+echo "python3 reality_forge_launcher.py"
+echo "Semua di tangan Tok Wan."
+
+
+echo "Semua projek telah berjaya dibina! ✨"
+
+
+
+echo "========================================================="
+
+echo "        [✔] DEPLOYMENT SELESAI! [✔]"
+
+echo "curl aistudio.google.com/app/prompts?state=%7B%22ids%22:%5B%221iPxQm3I9nLp1XSC0HJ04y4G2cfXBrHUp%22%5D,%22action%22:%22open%22,%22userId%22:%22117055884588038576992%22,%22resourceKeys%22:%7B%7D%7D&usp=sharing"
+
+echo "Untuk mulakan sistem, pergi ke folder Reality_Forge dan jalankan:"
+
+echo "python3 reality_forge_launcher.py"
+
+echo "Sekarang sistem ni sepenuhnya milik Tok Wan."
+
+// File: avsd_master_orchestrator.js
+
+// AVSD Master Orchestrator - Sistem Logik Penuh AI Studio
+
+// Dicipta untuk Tok Wan Adni
+
+
+
+const { EventEmitter } = require('events');
+
+
+
+// =============================================================
+
+// Wakil Modul: Ini adalah 'dummies' yang mewakili modul sebenar
+
+// =============================================================
+
+class NLPProcessor {
+
+    // Meniru kebolehan AI Studio untuk memahami arahan Tok Wan
+
+    async analyzeText(text) {
+
+        text = text.toLowerCase();
+
+        if (text.includes("kire") && text.includes("zpe")) {
+
+            return { action: 'query_zpe', module: 'avsd_hub' };
+
+        }
+
+        if (text.includes("kestabilan") && text.includes("plasma")) {
+
+            return { action: 'query_plasma_stability', module: 'avsd_hub' };
+
+        }
+
+        if (text.includes("scan") || text.includes("entropi")) {
+
+            return { action: 'scan_entropic', module: 'entropic_scanner' };
+
+        }
+
+        return { action: 'unknown', module: null };
+
+    }
+
+}
+
+
+
+class AVSDHubSimulator {
+
+    query_zpe() {
+
+        return { result: "Output Tenaga Kuantum ZPE: 24,000 μW/g" };
+
+    }
+
+    query_plasma_stability() {
+
+        return { result: "Indeks Kestabilan Plasma: 96.05 / 100" };
+
+    }
+
+}
+
+
+
+class EntropicScanner {
+
+    scan_entropic() {
+
+        const index = Math.random() * 100;
+
+        const status = index > 75 ? "Sangat Kacau ❌" : (index > 40 ? "Tidak Stabil ⚠️" : "Stabil ✅");
+
+        return { result: `Entropic Index: ${index.toFixed(2)}`, status: status };
+
+    }
+
+}
+
+
+
+class QuantumSecurity {
+
+    async authenticateUser(n) { return n === 'Tok Wan Adni'; }
+
+}
+
+
+
+// =============================================================
+
+// Teras Logik: AVSD Orchestrator Utama
+
+// =============================================================
+
+class AVSDOrchestrator {
+
+    constructor() {
+
+        this.nlp = new NLPProcessor();
+
+        this.avsd_hub = new AVSDHubSimulator();
+
+        this.entropic_scanner = new EntropicScanner();
+
+        this.security = new QuantumSecurity();
+
+        this.eventBus = new EventEmitter();
+
+    }
+
+
+
+    async init() {
+
+        console.log("=========================================");
+
+        console.log("  [🧠] AdniOS Quantum Logic System v1.0 ");
+
+        console.log("=========================================");
+
+        const isAuthorized = await this.security.authenticateUser('Tok Wan Adni');
+
+        if (!isAuthorized) {
+
+            console.error("[🔒] AKSES DITOLAK: Pengguna tidak sah.");
+
+            return;
+
+        }
+
+        console.log("[✅] Sistem sedia. Menunggu arahan Tok Wan.");
+
+        console.log("Taip 'keluar' untuk berhenti.");
+
+        this.listenForCommands();
+
+    }
+
+
+
+    async runCommand(commandText) {
+
+        console.log(`\n[▶️] Perintah diterima: '${commandText}'`);
+
+        const command = await this.nlp.analyzeText(commandText);
+
+
+
+        switch (command.module) {
+
+            case 'avsd_hub':
+
+                if (command.action === 'query_zpe') {
+
+                    const response = this.avsd_hub.query_zpe();
+
+                    console.log(`[Hasil] ${response.result}`);
+
+                } else if (command.action === 'query_plasma_stability') {
+
+                    const response = this.avsd_hub.query_plasma_stability();
+
+                    console.log(`[Hasil] ${response.result}`);
+
+                }
+
+                break;
+
+            case 'entropic_scanner':
+
+                if (command.action === 'scan_entropic') {
+
+                    const response = this.entropic_scanner.scan_entropic();
+
+                    console.log(`[Hasil] Indeks Kekacauan: ${response.result} | Status: ${response.status}`);
+
+                }
+
+                break;
+
+            default:
+
+                console.log("[❓] Maaf, arahan tidak difahami. Cuba lagi.");
+
+        }
+
+    }
+
+
+
+    listenForCommands() {
+
+        process.stdin.setEncoding('utf8');
+
+        process.stdin.on('data', async (data) => {
+
+            const command = data.toString().trim();
+
+            if (command.toLowerCase() === 'keluar') {
+
+                console("Sesi ditamatkan. Jumpa lagi!");
+
+                process.exit();
+
+            }
+
+            await this.runCommand(command);
+
+            console.log("\nSistem sedia untuk arahan seterusnya.");
+
+        });
+
+    }
+
+}#!/usr/bin/env bash
+
+# Fizik Plasma Quantum - Skrip Deployment Penuh AVSD
+
+# Disesuaikan khas untuk Tok Wan Adni
+
+set -euo pipefail
+
+
+
+# Nama folder utama projek
+
+ROOT_DIR="${1:-AVSD_Quantum_Supercluster}"
+
+
+
+# Cek kalau sudo ada, kalau tak ada, guna pkg untuk Termux
+
+if command -v sudo >/dev/null 2>&1; then
+
+    INSTALL_CMD="sudo apt install -y"
+
+else
+
+    INSTALL_CMD="pkg install -y"
+
+fi
+
+
+
+echo "========================================================="
+
+echo " [🌌] Memulakan Proses Deployment Sistem Penuh AVSD [🌌]"
+
+echo " [i] Folder utama akan dibuat di: $ROOT_DIR"
+
+echo "========================================================="
+
+
+
+# 1. Pasang semua dependencies
+
+echo ">>> Langkah 1: Memasang semua dependencies (node, python, java, flutter)..."
+
+$INSTALL_CMD nodejs npm python3 python3-pip openjdk-17-jre git
+
+npm install -g pm2
+
+pip3 install streamlit numpy matplotlib
+
+echo "Semua dependencies utama telah dipasang. ✅"
+
+sleep 1
+
+
+
+# 2. Buat struktur folder projek
+
+echo ">>> Langkah 2: Membuat struktur folder projek..."
+
+mkdir -p "$ROOT_DIR"/{Q-genesis/backend/public,Q-genesis/quantum_dashboard_flutter/lib/pages,AdniOS_NLP_Simulation_KT/src/main/kotlin/ai/{core,sim},Reality_Forge}
+
+echo "Struktur folder siap. ✅"
+
+sleep 1
+
+
+
+# 3. Salin fail-fail projek
+
+echo ">>> Langkah 3: Menyalin semua fail projek ke lokasi masing-masing..."
+
+
+
+# Q-genesis (Backend & Flutter)
+
+cat > "$ROOT_DIR/Q-genesis/backend/system.json" <<'JSON'
+
+{"project":{"name":"Q-genesis","version":"1.0.0"},"services":{"http_api":{"enabled":true}}}
+
+JSON
+
+cat > "$ROOT_DIR/Q-genesis/backend/server.js" <<'JS'
+
+import express from 'express'; const app = express(); app.get('/', (req, res) => res.send('Q-genesis Backend Running')); app.listen(5000);
+
+JS
+
+cat > "$ROOT_DIR/Q-genesis/backend/deploy.sh" <<'BASH'
+
+#!/usr/bin/env bash
+
+npm init -y > /dev/null 2>&1 && npm install express > /dev/null 2>&1
+
+BASH
+
+chmod +x "$ROOT_DIR/Q-genesis/backend/deploy.sh"
+
+cat > "$ROOT_DIR/Q-genesis/quantum_dashboard_flutter/pubspec.yaml" <<'YAML'
+
+name: quantum_dashboard_flutter
+
+version: 1.0.0
+
+environment: {sdk: ">=2.17.0 <3.0.0"}
+
+dependencies: {flutter: {sdk: flutter}, http: ^1.2.2, web_socket_channel: ^2.4.0}
+
+flutter: {uses-material-design: true}
+
+YAML
+
+cat > "$ROOT_DIR/Q-genesis/quantum_dashboard_flutter/lib/main.dart" <<'DART'
+
+import 'package:flutter/material.dart'; void main() => runApp(MaterialApp(home: Scaffold(body: Center(child: Text('Dashboard ready')))));
+
+DART
+
+cat > "$ROOT_DIR/Q-genesis/quantum_dashboard_flutter/build_apk.sh" <<'BASH'
+
+#!/usr/bin/env bash
+
+flutter pub get && flutter build apk --debug
+
+BASH
+
+chmod +x "$ROOT_DIR/Q-genesis/quantum_dashboard_flutter/build_apk.sh"
+
+
+
+# AVSD HQC Hub
+
+cat > "$ROOT_DIR/Q-genesis/avsd_hqc_hub.py" <<'PY'
+
+import streamlit as st; st.title("AVSD HQC Hub"); st.write("Simulator is active.")
+
+PY
+
+
+
+# AdniOS NLP + Simulation
+
+cat > "$ROOT_DIR/AdniOS_NLP_Simulation_KT/build.gradle.kts" <<'KTS'
+
+plugins { kotlin("jvm") version "1.8.10"; application }
+
+repositories { mavenCentral() }
+
+dependencies { implementation(kotlin("stdlib")) }
+
+application { mainClass.set("ai.core.NLPProcessorKt") }
+
+KTS
+
+cat > "$ROOT_DIR/AdniOS_NLP_Simulation_KT/src/main/kotlin/ai/core/NLPProcessor.kt" <<'KT'
+
+package ai.core; class NLPProcessor { fun analyzeText(text: String) = "Processed: '$text'" }
+
+KT
+
+cat > "$ROOT_DIR/AdniOS_NLP_Simulation_KT/src/main/kotlin/ai/sim/EventSimulator.kt" <<'KT'
+
+package ai.sim; class EventSimulator { fun runEvent(event: String) = "Simulated event '$event'" }
+
+KT
+
+
+
+# Reality Forge
+
+cat > "$ROOT_DIR/Reality_Forge/reality_forge_launcher.py" <<'PY'
+
+import subprocess; import json;
+
+def run_module(entry): print(f"[+] Launching: {entry['name']}"); subprocess.run(["streamlit", "run", entry["file"]]);
+
+def main(): config = json.loads('{"modules": [{"name": "AVSD HQC Hub", "type": "streamlit", "file": "../Q-genesis/avsd_hqc_hub.py"}]}')
+
+for mod in config.get("modules", []): run_module(mod)
+
+if __name__ == "__main__": main()
+
+PY
+
+cat > "$ROOT_DIR/Reality_Forge/entropic_scanner.py" <<'PY'
+
+import random; class EntropicScanner: def scan_object(self, name, val): idx = random.random()*100; return f"Entropic Index for {name}: {idx:.2f}"
+
+PY
+
+cat > "$ROOT_DIR/Reality_Forge/requirements.txt" <<'REQ'
+
+streamlit
+
+numpy
+
+matplotlib
+
+REQ
+
+
+
+echo "Semua fail telah disalin. ✅"
+
+sleep 1
+
+
+
+# 4. Bina semua projek
+
+echo ">>> Langkah 4: Membina (build) semua projek..."
+
+
+
+echo "      > Backend Q-genesis..."
+
+( cd "$ROOT_DIR/Q-genesis/backend" && ./deploy.sh )
+
+echo "      [✔] Backend siap."
+
+
+
+echo "      > Flutter Dashboard..."
+
+( cd "$ROOT_DIR/Q-genesis/quantum_dashboard_flutter" && flutter pub get )
+
+echo "      [✔] Flutter siap."
+
+
+
+echo "      > Projek Kotlin AdniOS..."
+
+( cd "$ROOT_DIR/AdniOS_NLP_Simulation_KT" && ./gradlew build )
+
+echo "      [✔] Projek Kotlin siap."
+
+
+
+echo "Semua projek telah berjaya dibina! ✨"
+
+
+
+echo "========================================================="
+
+echo "        [✔] DEPLOYMENT SELESAI! [✔]"
+
+echo "========================================================="
+
+echo "Untuk mulakan sistem, pergi ke folder Reality_Forge dan jalankan:"
+
+echo "python3 reality_forge_launcher.py"
+
+echo "Sekarang sistem ni sepenuhnya milik Tok Wan."
+
+
+
+#!/usr/bin/env bash
+
+# Fizik Plasma Quantum - Skrip Deployment Penuh AVSD
+
+# Disesuaikan khas untuk Tok Wan Adni
+
+set -euo pipefail
+
+
+
+# Nama folder utama projek
+
+ROOT_DIR="${1:-AVSD_Quantum_Supercluster}"
+
+
+
+# Cek kalau sudo ada, kalau tak ada, guna pkg untuk Termux
+
+if command -v sudo >/dev/null 2>&1; then
+
+    INSTALL_CMD="sudo apt install -y"
+
+else
+
+    INSTALL_CMD="pkg install -y"
+
+fi
+
+
+
+echo "========================================================="
+
+echo " [🌌] Memulakan Proses Deployment Sistem Penuh AVSD [🌌]"
+
+echo " [i] Folder utama akan dibuat di: $ROOT_DIR"
+
+echo "========================================================="
+
+
+
+# 1. Pasang semua dependencies
+
+echo ">>> Langkah 1: Memasang semua dependencies (node, python, java, flutter)..."
+
+$INSTALL_CMD nodejs npm python3 python3-pip openjdk-17-jre git
+
+npm install -g pm2
+
+pip3 install streamlit numpy matplotlib
+
+echo "Semua dependencies utama telah dipasang. ✅"
+
+sleep 1
+
+
+
+# 2. Buat struktur folder projek
+
+echo ">>> Langkah 2: Membuat struktur folder projek..."
+
+mkdir -p "$ROOT_DIR"/{Q-genesis/backend/public,Q-genesis/quantum_dashboard_flutter/lib/pages,AdniOS_NLP_Simulation_KT/src/main/kotlin/ai/{core,sim},Reality_Forge}
+
+echo "Struktur folder siap. ✅"
+
+sleep 1
+
+
+
+# 3. Salin fail-fail projek
+
+echo ">>> Langkah 3: Menyalin semua fail projek ke lokasi masing-masing..."
+
+
+
+# Q-genesis (Backend & Flutter)
+
+cat > "$ROOT_DIR/Q-genesis/backend/system.json" <<'JSON'
+
+{"project":{"name":"Q-genesis","version":"1.0.0"},"services":{"http_api":{"enabled":true}}}
+
+JSON
+
+cat > "$ROOT_DIR/Q-genesis/backend/server.js" <<'JS'
+
+import express from 'express'; const app = express(); app.get('/', (req, res) => res.send('Q-genesis Backend Running')); app.listen(5000);
+
+JS
+
+cat > "$ROOT_DIR/Q-genesis/backend/deploy.sh" <<'BASH'
+
+#!/usr/bin/env bash
+
+npm init -y > /dev/null 2>&1 && npm install express > /dev/null 2>&1
+
+BASH
+
+chmod +x "$ROOT_DIR/Q-genesis/backend/deploy.sh"
+
+cat > "$ROOT_DIR/Q-genesis/quantum_dashboard_flutter/pubspec.yaml" <<'YAML'
+
+name: quantum_dashboard_flutter
+
+version: 1.0.0
+
+environment: {sdk: ">=2.17.0 <3.0.0"}
+
+dependencies: {flutter: {sdk: flutter}, http: ^1.2.2, web_socket_channel: ^2.4.0}
+
+flutter: {uses-material-design: true}
+
+YAML
+
+cat > "$ROOT_DIR/Q-genesis/quantum_dashboard_flutter/lib/main.dart" <<'DART'
+
+import 'package:flutter/material.dart'; void main() => runApp(MaterialApp(home: Scaffold(body: Center(child: Text('Dashboard ready')))));
+
+DART
+
+cat > "$ROOT_DIR/Q-genesis/quantum_dashboard_flutter/build_apk.sh" <<'BASH'
+
+#!/usr/bin/env bash
+
+flutter pub get && flutter build apk --debug
+
+BASH
+
+chmod +x "$ROOT_DIR/Q-genesis/quantum_dashboard_flutter/build_apk.sh"
+
+
+
+# AVSD HQC Hub
+
+cat > "$ROOT_DIR/Q-genesis/avsd_hqc_hub.py" <<'PY'
+
+import streamlit as st; st.title("AVSD HQC Hub"); st.write("Simulator is active.")
+
+PY
+
+
+
+# AdniOS NLP + Simulation
+
+cat > "$ROOT_DIR/AdniOS_NLP_Simulation_KT/build.gradle.kts" <<'KTS'
+
+plugins { kotlin("jvm") version "1.8.10"; application }
+
+repositories { mavenCentral() }
+
+dependencies { implementation(kotlin("stdlib")) }
+
+application { mainClass.set("ai.core.NLPProcessorKt") }
+
+KTS
+
+cat > "$ROOT_DIR/AdniOS_NLP_Simulation_KT/src/main/kotlin/ai/core/NLPProcessor.kt" <<'KT'
+
+package ai.core; class NLPProcessor { fun analyzeText(text: String) = "Processed: '$text'" }
+
+KT
+
+cat > "$ROOT_DIR/AdniOS_NLP_Simulation_KT/src/main/kotlin/ai/sim/EventSimulator.kt" <<'KT'
+
+package ai.sim; class EventSimulator { fun runEvent(event: String) = "Simulated event '$event'" }
+
+KT
+
+
+
+# Reality Forge
+
+cat > "$ROOT_DIR/Reality_Forge/reality_forge_launcher.py" <<'PY'
+
+import subprocess; import json;
+
+def run_module(entry): print(f"[+] Launching: {entry['name']}"); subprocess.run(["streamlit", "run", entry["file"]]);
+
+def main(): config = json.loads('{"modules": [{"name": "AVSD HQC Hub", "type": "streamlit", "file": "../Q-genesis/avsd_hqc_hub.py"}]}')
+
+for mod in config.get("modules", []): run_module(mod)
+
+if __name__ == "__main__": main()
+
+PY
+
+cat > "$ROOT_DIR/Reality_Forge/entropic_scanner.py" <<'PY'
+
+import random; class EntropicScanner: def scan_object(self, name, val): idx = random.random()*100; return f"Entropic Index for {name}: {idx:.2f}"
+
+PY
+
+cat > "$ROOT_DIR/Reality_Forge/requirements.txt" <<'REQ'
+
+streamlit
+
+numpy
+
+matplotlib
+
+REQ
+
+
+
+echo "Semua fail telah disalin. ✅"
+
+sleep 1
+
+
+
+# 4. Bina semua projek
+
+echo ">>> Langkah 4: Membina (build) semua projek..."
+
+
+
+echo "      > Backend Q-genesis..."
+
+( cd "$ROOT_DIR/Q-genesis/backend" && ./deploy.sh )
+
+echo "      [✔] Backend siap."
+
+
+
+echo "      > Flutter Dashboard..."
+
+( cd "$ROOT_DIR/Q-genesis/quantum_dashboard_flutter" && flutter pub get )
+
+echo "      [✔] Flutter siap."
+
+
+
+echo "      > Projek Kotlin AdniOS..."
+
+( cd "$ROOT_DIR/AdniOS_NLP_Simulation_KT" && ./gradlew build )
+
+echo "      [✔] Projek Kotlin siap."
+
+
+
+echo "Semua projek telah berjaya dibina! ✨"
+
+
+
+echo "========================================================="
+
+echo "        [✔] DEPLOYMENT SELESAI! [✔]"
+
+echo "========================================================="
+
+echo "Untuk mulakan sistem, pergi ke folder Reality_Forge dan jalankan:"
+
+echo "python3 reality_forge_launcher.py"
+
+echo "Sekarang sistem ni sepenuhnya milik Tok Wan."
+
+
+
+// === Mulakan Sistem ===
+
+const orchestrator = new AVSDOrchestrator= all
+
+orchestrator.init=takeover.db
